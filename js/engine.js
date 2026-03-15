@@ -242,6 +242,56 @@
     });
   }
 
+  // ── Mobile Nav Bar (prev/next arrows + swipe zone above iframes) ──
+  var navBar   = document.getElementById('nav-bar');
+  var navPrev  = document.getElementById('nav-prev');
+  var navNext  = document.getElementById('nav-next');
+  var navTitle = document.getElementById('nav-title');
+  var edgeLeft = document.getElementById('edge-left');
+  var edgeRight = document.getElementById('edge-right');
+
+  if (navPrev) navPrev.addEventListener('click', function (e) {
+    e.stopPropagation();
+    goToSlide(currentSlide - 1);
+  });
+  if (navNext) navNext.addEventListener('click', function (e) {
+    e.stopPropagation();
+    goToSlide(currentSlide + 1);
+  });
+  if (edgeLeft) edgeLeft.addEventListener('click', function (e) {
+    e.stopPropagation();
+    goToSlide(currentSlide - 1);
+  });
+  if (edgeRight) edgeRight.addEventListener('click', function (e) {
+    e.stopPropagation();
+    goToSlide(currentSlide + 1);
+  });
+
+  // Swipe on nav bar itself (above iframes)
+  if (navBar) {
+    var navTouchX = 0;
+    navBar.addEventListener('touchstart', function (e) {
+      navTouchX = e.touches[0].clientX;
+    }, { passive: true });
+    navBar.addEventListener('touchend', function (e) {
+      var dx = e.changedTouches[0].clientX - navTouchX;
+      if (Math.abs(dx) > 40) {
+        if (dx < 0) goToSlide(currentSlide + 1);
+        else goToSlide(currentSlide - 1);
+      }
+    }, { passive: true });
+  }
+
+  // Update nav title when slide changes
+  var origGoToSlide = goToSlide;
+  goToSlide = function (idx) {
+    origGoToSlide(idx);
+    if (navTitle && slides[currentSlide]) {
+      var h2 = slides[currentSlide].querySelector('h2');
+      navTitle.textContent = h2 ? h2.textContent : 'Slide ' + (currentSlide + 1);
+    }
+  };
+
   // ── Mobile: tap MENU or counter to open slide grid ──
   var menuBtn = document.getElementById('mobile-menu-btn');
   if (menuBtn) {

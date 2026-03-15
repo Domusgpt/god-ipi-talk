@@ -220,6 +220,87 @@
   z-index: 1;
 }
 
+/* ── Mobile Navigation Bar ──
+ * A thin strip at the top with prev/next arrows and swipe support.
+ * Always sits above iframes so navigation works even on visualizer slides.
+ * Hidden on desktop (keyboard handles it).
+ */
+.nav-bar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  z-index: 210;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(rgba(5, 5, 8, 0.85), transparent);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-x;
+}
+
+.nav-prev,
+.nav-next {
+  width: 56px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: var(--gold);
+  cursor: pointer;
+  user-select: none;
+}
+
+.nav-prev:active,
+.nav-next:active {
+  opacity: 0.5;
+}
+
+.nav-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  text-align: center;
+  flex: 1;
+  pointer-events: none;
+}
+
+/* ── Edge Tap Zones ──
+ * Thin invisible strips on left/right screen edges.
+ * Tap left edge = prev, tap right edge = next.
+ * Sits above iframes (z-index > iframe).
+ */
+.edge-zone {
+  display: none;
+  position: fixed;
+  top: 44px;
+  bottom: 60px;
+  width: 28px;
+  z-index: 205;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.edge-zone.edge-left {
+  left: 0;
+}
+
+.edge-zone.edge-right {
+  right: 0;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .nav-bar {
+    display: flex;
+  }
+  .edge-zone {
+    display: block;
+  }
+}
+
 /* ── Mobile Menu Button ── */
 .mobile-menu-btn {
   display: none;
