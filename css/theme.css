@@ -1,45 +1,22 @@
 /*
- * ══════════════════════════════════════════════════════════════
  * THEME.CSS — Design Tokens for the G.O.D. Presentation
- * ══════════════════════════════════════════════════════════════
- *
- * This file defines the visual language shared across the entire
- * Geometric Orthogonal Dynamics framework. Every color, font,
- * and spacing value used in the presentation traces back here.
- *
- * COLOR PHILOSOPHY
- * ────────────────
- * The palette mirrors the mathematics:
- *   Gold   (#c8a96e)  →  D8 integer roots (112 of them)
- *   Cyan   (#00e5ff)  →  S+ spinor roots (128 of them)
- *   Purple (#bf7fff)  →  Mixed shells / conjectures
- *   Orange (#ff6b35)  →  Action / energy / emphasis
- *
- * The deep background (#050508) is chosen to make the lattice
- * visualizations feel like looking into space — which, in a
- * sense, is exactly what 8-dimensional geometry is.
- *
- * TYPOGRAPHY
- * ──────────
- * Crimson Pro (serif, 200–600 weight) — Display text.
- *   Light weight evokes mathematical elegance.
- * Space Mono (monospace) — Data, equations, UI labels.
- *   Precision and readability for numerical content.
  */
 
 :root {
   /* ── Core Palette ── */
   --gold:       #c8a96e;
   --gold-dim:   rgba(200, 169, 110, 0.4);
+  --gold-glow:  rgba(200, 169, 110, 0.15);
   --cyan:       #00e5ff;
   --cyan-dim:   rgba(0, 229, 255, 0.4);
+  --cyan-glow:  rgba(0, 229, 255, 0.12);
   --purple:     #bf7fff;
   --purple-dim: rgba(191, 127, 255, 0.4);
   --orange:     #ff6b35;
 
   /* ── Backgrounds ── */
-  --deep:       #050508;       /* Main background — almost black */
-  --panel:      rgba(5, 5, 12, 0.96);  /* Glassmorphism panels */
+  --deep:       #050508;
+  --panel:      rgba(5, 5, 12, 0.96);
   --panel-light:rgba(12, 12, 20, 0.85);
 
   /* ── Borders ── */
@@ -47,9 +24,9 @@
   --border-dim: rgba(200, 169, 110, 0.08);
 
   /* ── Text ── */
-  --text:       #e8e0d0;       /* Primary — warm beige */
-  --text-bright:#f4f0e8;       /* Headings — near white */
-  --text-dim:   #7a7060;       /* Secondary — muted */
+  --text:       #e8e0d0;
+  --text-bright:#f4f0e8;
+  --text-dim:   #7a7060;
 
   /* ── Spacing ── */
   --gap-sm:     0.6rem;
@@ -59,15 +36,11 @@
 
   /* ── Transitions ── */
   --ease:       cubic-bezier(0.22, 1, 0.36, 1);
-  --duration:   0.5s;
+  --ease-out:   cubic-bezier(0.0, 0, 0.2, 1);
+  --ease-spring:cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration:   0.6s;
 
-  /* ── Typography Scale ──
-   * Uses clamp() for fluid sizing:
-   *   clamp(min, preferred, max)
-   * This ensures readability on both a phone screen
-   * (someone watching the YouTube stream) and a
-   * 1920×1080 screen share.
-   */
+  /* ── Typography Scale ── */
   --fs-hero:    clamp(2rem, 5vw, 4.2rem);
   --fs-h2:      clamp(1.6rem, 3.5vw, 3rem);
   --fs-h3:      clamp(0.85rem, 1.8vw, 1.3rem);
@@ -143,10 +116,6 @@ p, .desc {
   color: var(--text-dim);
 }
 
-/* ── Equation Text ──
- * Used for inline math displays. We use Space Mono
- * for precision — every digit lines up perfectly.
- */
 .eq {
   font-family: 'Space Mono', monospace;
   font-size: var(--fs-eq);
@@ -159,7 +128,6 @@ p, .desc {
 
 .eq-lg { font-size: var(--fs-eq-lg); }
 
-/* Color spans for equations */
 .eq .cyan   { color: var(--cyan); }
 .eq .purple { color: var(--purple); }
 .eq .gold   { color: var(--gold); }

@@ -1,133 +1,314 @@
 /**
- * ══════════════════════════════════════════════════════════════
- * ANIMATIONS.JS — Per-Slide Entrance Animations
- * ══════════════════════════════════════════════════════════════
+ * ANIMATIONS.JS — Cinematic Entrance Animations
  *
- * Each slide can have custom entrance animations that fire when
- * the slide becomes active. This creates a "build" effect where
- * elements appear one by one, giving the audience time to absorb
- * each piece of information.
- *
- * ANIMATION PHILOSOPHY
- * ────────────────────
- * Animations serve the mathematics, not the other way around.
- * Each animation is designed to mirror what the math is doing:
- *
- *   - Palindrome bars GROW UPWARD → populations being counted
- *   - Shell cards APPEAR LEFT TO RIGHT → shells being enumerated
- *   - σ-chain steps SLIDE IN → the function being iterated
- *
- * All animations use CSS transitions (defined in components.css)
- * triggered by adding CSS classes. No JavaScript animation loops.
- * This keeps performance predictable even with WebGL iframes.
- *
- * TIMING
- * ──────
- * Delays are calibrated for a live presentation pace:
- *   - 200-350ms between elements → comfortable for narration
- *   - 300ms initial delay → lets the slide opacity transition finish
- *   - Total build time: 1.5-3 seconds per animated slide
+ * Every slide gets staggered element entrances.
+ * Key slides get special choreography:
+ *   - Bars grow with spring physics
+ *   - Shell cards cascade with type-color glow
+ *   - Info rows typewriter in
+ *   - Sigma chain flows like a river
+ *   - Stat numbers count up from zero
+ *   - Open questions unfold one by one
  */
 
 (function () {
   'use strict';
 
-  // Track which slides have already been animated
-  // (so revisiting a slide doesn't replay the animation)
   const animated = new Set();
 
   /**
+   * Stagger-animate all child elements of a slide.
+   * This is the default "everything fades in nicely" animation.
+   */
+  function animateSlideElements(slide, baseDelay) {
+    baseDelay = baseDelay || 200;
+    // Animate h2, h3, p, .eq, blockquote, .desc, .desc-sm, .split, .glow-line, etc.
+    var targets = slide.querySelectorAll(
+      'h2, h3, p, .eq, blockquote, .desc, .desc-sm, .glow-line, ' +
+      '.split, .thanks-grid, .thanks-name, .iframe-overlay'
+    );
+    targets.forEach(function (el, i) {
+      el.classList.add('anim-target');
+      setTimeout(function () {
+        el.classList.add('visible');
+      }, baseDelay + i * 120);
+    });
+  }
+
+  /**
+   * Counter animation — makes a number count up from 0.
+   */
+  function countUp(el, target, duration, suffix) {
+    suffix = suffix || '';
+    var start = 0;
+    var startTime = null;
+    // Handle fraction targets
+    var isFloat = String(target).indexOf('.') !== -1;
+
+    function tick(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      // Ease out quad
+      var eased = 1 - (1 - progress) * (1 - progress);
+      var current = Math.round(eased * target);
+      if (isFloat) {
+        current = (eased * target).toFixed(3);
+      }
+      el.textContent = current + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  /**
    * Trigger entrance animations for a specific slide.
-   * Called by engine.js whenever a slide becomes active.
-   *
-   * @param {number} slideIndex - Zero-based slide index
    */
   window.triggerSlideAnimations = function (slideIndex) {
-    // Skip if already animated
     if (animated.has(slideIndex)) return;
     animated.add(slideIndex);
 
+    var slides = document.querySelectorAll('.slide');
+    var slide = slides[slideIndex];
+    if (!slide) return;
+
     switch (slideIndex) {
+      case 0:
+        // ── Title Slide ──
+        // Cinematic entrance: title fades in, then subtitle, then author
+        animateTitleSlide(slide);
+        break;
+
       case 1:
         // ── Slide 2: Palindrome Bars ──
-        // The six bars grow upward to their population heights.
-        // Each bar appears 200ms after the previous one.
-        //
-        // Heights are proportional to shell populations:
-        //   24 → 72px, 56 → 168px, 40 → 120px
-        //   (scaled by 3× for visual impact)
-        animateBars();
+        animateSlideElements(slide, 100);
+        setTimeout(animateBars, 600);
+        break;
+
+      case 3:
+        // ── Slide 4: Projection ──
+        animateSlideElements(slide, 150);
         break;
 
       case 4:
         // ── Slide 5: Shell Cards ──
-        // Six cards appear one by one, left to right.
-        // The palindromic symmetry becomes visible as
-        // shells 4 and 5 mirror shells 1 and 0.
-        animateShellCards();
+        animateSlideElements(slide, 100);
+        setTimeout(animateShellCards, 500);
+        break;
+
+      case 5:
+        // ── Slide 6: Information Table ──
+        animateSlideElements(slide, 100);
+        setTimeout(animateInfoRows, 500);
+        break;
+
+      case 6:
+        // ── Slide 7: Vopson ──
+        animateSlideElements(slide, 150);
         break;
 
       case 7:
         // ── Slide 8: σ-Chain ──
-        // Each step of the chain slides in from the left.
-        // Arrows appear between steps.
-        // This mimics "iterating" the σ function.
-        animateSigmaChain();
+        animateSlideElements(slide, 100);
+        setTimeout(animateSigmaChain, 500);
+        break;
+
+      case 12:
+        // ── Slide 13: Fine Structure 137 ──
+        animate137(slide);
+        break;
+
+      case 13:
+        // ── Slide 14: Stats ──
+        animateSlideElements(slide, 100);
+        setTimeout(function () { animateStatCards(slide); }, 500);
+        break;
+
+      case 14:
+        // ── Slide 15: Open Questions ──
+        animateSlideElements(slide, 100);
+        setTimeout(function () { animateOpenQuestions(slide); }, 400);
+        break;
+
+      case 15:
+        // ── Slide 16: Thanks ──
+        animateSlideElements(slide, 200);
+        break;
+
+      default:
+        // All other slides (including iframe visualizer slides)
+        animateSlideElements(slide, 200);
         break;
     }
   };
 
   /**
-   * Animate the palindrome bar chart (Slide 2).
-   *
-   * The bars represent shell populations [24, 56, 40, 40, 56, 24].
-   * They start at height 0 and grow to their target heights.
-   * The CSS transition in components.css handles the smooth growth.
+   * Mark all animations as complete (for review mode / touch devices).
    */
+  window.markAllAnimated = function () {
+    var slides = document.querySelectorAll('.slide');
+    slides.forEach(function (slide, i) {
+      animated.add(i);
+      // Show all anim targets
+      slide.querySelectorAll('.anim-target').forEach(function (el) {
+        el.classList.add('visible');
+      });
+      // Show all animatable elements
+      slide.querySelectorAll('.shell-card, .sigma-step, .sigma-arrow').forEach(function (el) {
+        el.classList.add('show');
+      });
+      slide.querySelectorAll('.info-row').forEach(function (el) {
+        el.classList.add('visible');
+      });
+      slide.querySelectorAll('.stat-card').forEach(function (el) {
+        el.classList.add('visible');
+      });
+      slide.querySelectorAll('.oq-list li').forEach(function (el) {
+        el.classList.add('visible');
+      });
+      slide.querySelectorAll('.bar-fill').forEach(function (bar) {
+        if (bar.dataset.h) {
+          bar.style.height = bar.dataset.h + 'px';
+          bar.classList.add('grown');
+        }
+      });
+      slide.querySelectorAll('.bar-value').forEach(function (el) {
+        el.classList.add('visible');
+      });
+    });
+  };
+
+  // ── Title slide ──
+  function animateTitleSlide(slide) {
+    var elements = slide.querySelectorAll('.title-content > *');
+    elements.forEach(function (el, i) {
+      el.classList.add('anim-target');
+      setTimeout(function () {
+        el.classList.add('visible');
+      }, 400 + i * 250);
+    });
+  }
+
+  // ── Palindrome Bars ──
   function animateBars() {
-    const bars = document.querySelectorAll('#palindrome-bars .bar-fill');
+    var bars = document.querySelectorAll('#palindrome-bars .bar-fill');
+    var vals = document.querySelectorAll('#palindrome-bars .bar-value');
     bars.forEach(function (bar, i) {
       setTimeout(function () {
         bar.style.height = bar.dataset.h + 'px';
-      }, 300 + i * 200);
+        bar.classList.add('grown');
+      }, i * 250);
+    });
+    // After bars done, show values
+    vals.forEach(function (val, i) {
+      setTimeout(function () {
+        val.classList.add('visible');
+      }, bars.length * 250 + 200 + i * 100);
     });
   }
 
-  /**
-   * Animate the shell cards (Slide 5).
-   *
-   * Cards start invisible (opacity: 0, translateY: 20px) via CSS.
-   * Adding the "show" class triggers the CSS transition.
-   * The 350ms stagger lets the presenter narrate each shell.
-   */
+  // ── Shell Cards ──
   function animateShellCards() {
-    const cards = document.querySelectorAll('#shell-grid .shell-card');
+    var cards = document.querySelectorAll('#shell-grid .shell-card');
     cards.forEach(function (card, i) {
       setTimeout(function () {
         card.classList.add('show');
-      }, 400 + i * 350);
+      }, i * 300);
     });
   }
 
-  /**
-   * Animate the σ-chain (Slide 8).
-   *
-   * Steps and arrows alternate, sliding in from the left.
-   * The 600ms delay between elements gives the audience
-   * time to read each number and its significance.
-   *
-   * σ(28) = 56  → "28 rotation planes produce 56 D8 roots"
-   * σ(56) = 120 → "56 D8 roots connect to 120 dimensions"
-   * σ(120)= 360 → "120 dimensions govern 360 = |A₆| = 6 shells"
-   */
+  // ── Info Table Rows ──
+  function animateInfoRows() {
+    var rows = document.querySelectorAll('.info-row');
+    rows.forEach(function (row, i) {
+      setTimeout(function () {
+        row.classList.add('visible');
+      }, i * 400);
+    });
+  }
+
+  // ── σ-Chain ──
   function animateSigmaChain() {
-    const elements = document.querySelectorAll(
+    var elements = document.querySelectorAll(
       '#sigma-chain .sigma-step, #sigma-chain .sigma-arrow'
     );
     elements.forEach(function (el, i) {
       setTimeout(function () {
         el.classList.add('show');
-      }, 300 + i * 600);
+      }, i * 500);
+    });
+  }
+
+  // ── 137 Slide ──
+  function animate137(slide) {
+    var bigNum = slide.querySelector('.big-num');
+    var others = slide.querySelectorAll('h2, h3, p, .eq, .desc-sm, .glow-line');
+
+    // Start with everything hidden
+    if (bigNum) {
+      bigNum.style.opacity = '0';
+      bigNum.style.transform = 'scale(0.5)';
+      bigNum.style.transition = 'opacity 1.2s var(--ease), transform 1.2s var(--ease-spring)';
+    }
+    others.forEach(function (el) { el.classList.add('anim-target'); });
+
+    // Big number slams in first
+    setTimeout(function () {
+      if (bigNum) {
+        bigNum.style.opacity = '1';
+        bigNum.style.transform = 'scale(1)';
+      }
+    }, 300);
+
+    // Then supporting text
+    others.forEach(function (el, i) {
+      setTimeout(function () {
+        el.classList.add('visible');
+      }, 1200 + i * 200);
+    });
+  }
+
+  // ── Stat Cards with counting numbers ──
+  function animateStatCards(slide) {
+    var cards = slide.querySelectorAll('.stat-card');
+    cards.forEach(function (card, i) {
+      setTimeout(function () {
+        card.classList.add('visible');
+        // Count up the number
+        var numEl = card.querySelector('.sc-num');
+        if (numEl) {
+          var text = numEl.textContent.trim();
+          // Handle "361/361" format
+          if (text.indexOf('/') !== -1) {
+            var parts = text.split('/');
+            var target = parseInt(parts[0]);
+            var denom = parts[1];
+            var startTime = null;
+            (function tick(ts) {
+              if (!startTime) startTime = ts;
+              var progress = Math.min((ts - startTime) / 1500, 1);
+              var eased = 1 - Math.pow(1 - progress, 3);
+              numEl.textContent = Math.round(eased * target) + '/' + denom;
+              if (progress < 1) requestAnimationFrame(tick);
+            })(performance.now());
+          } else {
+            var num = parseInt(text);
+            if (!isNaN(num) && num > 0) {
+              countUp(numEl, num, 1500, '');
+            }
+          }
+        }
+      }, i * 300);
+    });
+  }
+
+  // ── Open Questions List ──
+  function animateOpenQuestions(slide) {
+    var items = slide.querySelectorAll('.oq-list li');
+    items.forEach(function (li, i) {
+      setTimeout(function () {
+        li.classList.add('visible');
+      }, i * 250);
     });
   }
 })();

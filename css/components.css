@@ -1,30 +1,11 @@
 /*
- * ══════════════════════════════════════════════════════════════
- * COMPONENTS.CSS — Reusable Visual Components
- * ══════════════════════════════════════════════════════════════
- *
- * Each component here corresponds to a mathematical concept
- * in the presentation. The CSS itself tells a story:
- *
- *   BAR CHARTS    → Shell populations (the palindrome)
- *   SHELL CARDS   → The six shells and their type separation
- *   INFO TABLE    → Shannon entropy decomposition
- *   SIGMA CHAIN   → The divisor sum walk through E8
- *   STAT CARDS    → Proof verification metrics
- *   BIG NUMBER    → The 137 decomposition
+ * COMPONENTS.CSS — Animated Visual Components
+ * Everything glows, breathes, and enters with purpose.
  */
 
 /* ══════════════════════════════════════════════════════════════
  * BAR CHART — Shell Population Palindrome
- * ══════════════════════════════════════════════════════════════
- * Used on Slide 2 to show [24, 56, 40, 40, 56, 24].
- * The bars grow upward with a spring-like easing curve.
- * Heights are set via data-h attributes and animated by JS.
- *
- * WHY THIS MATTERS:
- * The palindrome is the first hint that E8 has mirror symmetry
- * in its shell structure — matter mirrors antimatter.
- */
+ * ══════════════════════════════════════════════════════════════ */
 .bar-row {
   display: flex;
   align-items: flex-end;
@@ -43,7 +24,23 @@
 .bar-fill {
   width: clamp(36px, 6vw, 72px);
   border-radius: 4px 4px 0 0;
-  transition: height 1.2s var(--ease);
+  transition: height 1.8s var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated glow sweep on bars */
+.bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.6s ease 1.8s;
+}
+
+.bar-fill.grown::after {
+  opacity: 1;
 }
 
 .bar-label {
@@ -56,24 +53,20 @@
   font-family: 'Space Mono', monospace;
   font-size: clamp(0.85rem, 1.4vw, 1.1rem);
   font-weight: 700;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.bar-value.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 
 /* ══════════════════════════════════════════════════════════════
  * SHELL CARDS — The Six Shells
- * ══════════════════════════════════════════════════════════════
- * Used on Slide 5. Each card represents one of the 6 shells
- * in the stereoscopic parity projection.
- *
- * TYPE COLOR CODING:
- *   type-s (S+ spinor)  → Cyan   — shells 0 and 5
- *   type-d (D8 integer) → Gold   — shells 1 and 4
- *   type-m (mixed)      → Purple — shells 2 and 3
- *
- * Cards animate in one-by-one (see animations.js) to build
- * the palindrome visually, giving the audience time to see
- * the mirror symmetry emerge.
- */
+ * ══════════════════════════════════════════════════════════════ */
 .shell-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -90,13 +83,19 @@
   padding: clamp(0.6rem, 1.2vw, 1.2rem);
   text-align: center;
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translateY(30px) scale(0.9);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease), border-color 0.3s, box-shadow 0.3s;
 }
 
 .shell-card.show {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+}
+
+.shell-card.show:hover {
+  border-color: var(--gold-dim);
+  box-shadow: 0 4px 20px var(--gold-glow);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .shell-card .sc-idx {
@@ -118,29 +117,19 @@
   font-family: 'Space Mono', monospace;
 }
 
-/* Type-specific coloring */
+/* Type-specific coloring with glow */
 .shell-card.type-s .sc-pop { color: var(--cyan); }
 .shell-card.type-d .sc-pop { color: var(--gold); }
 .shell-card.type-m .sc-pop { color: var(--purple); }
 
+.shell-card.type-s.show { border-color: rgba(0, 229, 255, 0.15); box-shadow: 0 0 15px var(--cyan-glow); }
+.shell-card.type-d.show { border-color: rgba(200, 169, 110, 0.15); box-shadow: 0 0 15px var(--gold-glow); }
+.shell-card.type-m.show { border-color: rgba(191, 127, 255, 0.15); box-shadow: 0 0 15px rgba(191,127,255,0.08); }
+
 
 /* ══════════════════════════════════════════════════════════════
  * INFORMATION TABLE — Shannon Entropy Decomposition
- * ══════════════════════════════════════════════════════════════
- * Used on Slide 6 — the key result of the entire talk.
- *
- * THE MATH:
- *   H(type)              = -Σ p(t) log₂ p(t)     = 0.997 bits
- *   H(shell | type)      = Σ p(t) H(shell | t)    = 1.509 bits
- *   H(position | shell)  = Σ p(s) H(pos | s)      = 5.401 bits
- *   ─────────────────────────────────────────────────────────
- *   Total                = H(root)                 = 7.907 bits
- *
- * The key insight: 7.907 = log₂(240) exactly.
- * This means the six-shell decomposition is COMPLETE —
- * no information is lost and none is redundantly encoded.
- * This is what "information conservation" means geometrically.
- */
+ * ══════════════════════════════════════════════════════════════ */
 .info-table {
   display: flex;
   flex-direction: column;
@@ -155,6 +144,14 @@
   gap: 1rem;
   font-family: 'Space Mono', monospace;
   font-size: clamp(0.95rem, 1.8vw, 1.35rem);
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+}
+
+.info-row.visible {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .info-row .lbl {
@@ -176,32 +173,13 @@
 
 .info-row.total .val {
   color: var(--gold);
+  text-shadow: 0 0 20px var(--gold-glow);
 }
 
 
 /* ══════════════════════════════════════════════════════════════
  * σ-CHAIN — The Divisor Sum Walk
- * ══════════════════════════════════════════════════════════════
- * Used on Slide 8.
- *
- * THE σ FUNCTION:
- *   σ(n) = sum of ALL divisors of n (including 1 and n).
- *   Example: σ(28) = 1+2+4+7+14+28 = 56
- *
- * THE CHAIN:
- *   28 → 56 → 120 → 360
- *
- *   28  = C(8,2) = number of rotation planes in 8D
- *         Also the 2nd perfect number (σ(28) = 2×28)
- *   56  = population of the D8 (integer) shells
- *   120 = sum of E8 Coxeter exponents = dim(Level 2)
- *         Also 5! = |600-cell vertices|
- *   360 = |A₆| = order of the alternating group on 6 elements
- *         Governs the 6-shell decomposition
- *
- * Each step appears with a delay (see animations.js)
- * to let the audience absorb the chain one link at a time.
- */
+ * ══════════════════════════════════════════════════════════════ */
 .sigma-chain {
   display: flex;
   flex-direction: column;
@@ -215,13 +193,13 @@
   align-items: center;
   gap: 1.2rem;
   opacity: 0;
-  transform: translateX(-20px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translateX(-40px) scale(0.95);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
 }
 
 .sigma-step.show {
   opacity: 1;
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
 }
 
 .sigma-num {
@@ -231,6 +209,7 @@
   color: var(--gold);
   min-width: 4ch;
   text-align: right;
+  text-shadow: 0 0 20px var(--gold-glow);
 }
 
 .sigma-desc {
@@ -247,19 +226,19 @@
   padding: 0.2rem 0;
   padding-left: 2ch;
   opacity: 0;
-  transition: opacity 0.6s ease;
+  transform: scaleY(0);
+  transition: opacity 0.4s ease, transform 0.4s var(--ease-spring);
 }
 
 .sigma-arrow.show {
   opacity: 1;
+  transform: scaleY(1);
 }
 
 
 /* ══════════════════════════════════════════════════════════════
- * STAT CARDS — Verification Metrics
- * ══════════════════════════════════════════════════════════════
- * Used on Slide 14 to show 361/361 proof tests, 43 theorems, etc.
- */
+ * STAT CARDS — Verification Metrics (with counter animation)
+ * ══════════════════════════════════════════════════════════════ */
 .stat-row {
   display: flex;
   gap: clamp(1rem, 3vw, 3rem);
@@ -275,6 +254,18 @@
   padding: clamp(1rem, 2vw, 2rem) clamp(1.5rem, 3vw, 3rem);
   text-align: center;
   min-width: 10rem;
+  opacity: 0;
+  transform: translateY(30px) scale(0.9);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease), box-shadow 0.3s;
+}
+
+.stat-card.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.stat-card.visible:hover {
+  box-shadow: 0 0 30px var(--gold-glow);
 }
 
 .stat-card .sc-num {
@@ -282,6 +273,7 @@
   font-size: clamp(2rem, 4vw, 3.4rem);
   font-weight: 700;
   color: var(--gold);
+  text-shadow: 0 0 25px var(--gold-glow);
 }
 
 .stat-card .sc-lbl {
@@ -295,17 +287,8 @@
 
 
 /* ══════════════════════════════════════════════════════════════
- * BIG NUMBER — The 137 Display
- * ══════════════════════════════════════════════════════════════
- * Used on Slide 13 for the fine structure constant decomposition.
- *
- * 137 = 128 + 8 + 1
- *     = |S+ spinor roots| + dim(E8) + |identity element|
- *
- * The glow effect (text-shadow) makes it feel like the number
- * is radiating — appropriate for α⁻¹, the coupling constant
- * that governs electromagnetic interaction strength.
- */
+ * BIG NUMBER — The 137 Display (pulsing glow)
+ * ══════════════════════════════════════════════════════════════ */
 .big-num {
   font-family: 'Space Mono', monospace;
   font-size: var(--fs-big-num);
@@ -313,15 +296,18 @@
   color: var(--gold);
   text-align: center;
   line-height: 1;
-  text-shadow: 0 0 40px rgba(200, 169, 110, 0.25);
+  animation: big-num-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes big-num-glow {
+  0%   { text-shadow: 0 0 40px rgba(200, 169, 110, 0.2), 0 0 80px rgba(200, 169, 110, 0.08); }
+  100% { text-shadow: 0 0 60px rgba(200, 169, 110, 0.4), 0 0 120px rgba(200, 169, 110, 0.15), 0 0 200px rgba(200, 169, 110, 0.05); }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
- * OPEN QUESTIONS LIST
- * ══════════════════════════════════════════════════════════════
- * Used on Slide 15. Styled as a clean list with cyan arrows.
- */
+ * OPEN QUESTIONS LIST (animated)
+ * ══════════════════════════════════════════════════════════════ */
 .oq-list {
   list-style: none;
   max-width: 44em;
@@ -335,6 +321,14 @@
   font-size: var(--fs-body-sm);
   color: var(--text);
   line-height: 1.5;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+}
+
+.oq-list li.visible {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .oq-list li::before {
@@ -362,6 +356,34 @@
   padding: 0.5rem 1.2rem;
   border: 1px solid var(--border);
   border-radius: 4px;
+  transition: border-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.thanks-name:hover {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+  box-shadow: 0 0 15px var(--gold-glow);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+ * GLOW ACCENT LINES (decorative)
+ * ══════════════════════════════════════════════════════════════ */
+.glow-line {
+  width: 60%;
+  max-width: 300px;
+  height: 1px;
+  margin: 1rem auto;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  position: relative;
+}
+
+.glow-line::after {
+  content: '';
+  position: absolute;
+  inset: -2px 0;
+  background: linear-gradient(90deg, transparent, var(--gold-glow), transparent);
+  filter: blur(4px);
 }
 
 

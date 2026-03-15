@@ -1,28 +1,19 @@
 /*
- * ══════════════════════════════════════════════════════════════
  * LAYOUT.CSS — Slide System & Structural Layout
- * ══════════════════════════════════════════════════════════════
- *
- * HOW THE SLIDE SYSTEM WORKS
- * ──────────────────────────
- * Each slide is a <section class="slide"> positioned absolutely
- * to fill the entire viewport. Only the one with class "active"
- * is visible (opacity: 1). Navigation swaps the active class
- * with a CSS opacity transition — no JavaScript animation needed.
- *
- * This approach was chosen over scroll-based or transform-based
- * slides because:
- *   1. iframes with Three.js visualizers need stable positioning
- *   2. Opacity transitions don't trigger layout recalculation
- *   3. Each slide can have its own z-index stacking context
- *
- * IFRAME EMBEDDING
- * ────────────────
- * Slides 3, 9, 10, 11, and 12 embed live visualizers via iframe.
- * The iframes use data-src instead of src — they only load when
- * their slide becomes active (see engine.js). This prevents 5
- * WebGL contexts from fighting for GPU resources simultaneously.
+ * Now with cinematic transitions, progress bar, and particle backgrounds
  */
+
+/* ── Progress Bar ── */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--cyan));
+  z-index: 300;
+  transition: width 0.5s var(--ease);
+  box-shadow: 0 0 12px var(--gold-glow), 0 0 30px var(--cyan-glow);
+}
 
 /* ── The Deck Container ── */
 .deck {
@@ -34,21 +25,40 @@
 /* ── Individual Slide ── */
 .slide {
   position: absolute;
-  inset: 0;                    /* top:0 right:0 bottom:0 left:0 */
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--duration) ease;
   padding: 4vh 6vw;
   overflow: hidden;
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out), filter 0.7s var(--ease-out);
+  transform: scale(0.95) translateY(20px);
+  filter: blur(4px);
 }
 
 .slide.active {
   opacity: 1;
   pointer-events: auto;
+  transform: scale(1) translateY(0);
+  filter: blur(0);
+}
+
+/* Exiting slide goes the other direction */
+.slide.exit-left {
+  opacity: 0;
+  transform: scale(0.92) translateX(-60px);
+  filter: blur(6px);
+  transition: opacity 0.5s ease, transform 0.5s ease, filter 0.5s ease;
+}
+
+.slide.exit-right {
+  opacity: 0;
+  transform: scale(0.92) translateX(60px);
+  filter: blur(6px);
+  transition: opacity 0.5s ease, transform 0.5s ease, filter 0.5s ease;
 }
 
 /* Allow interaction with embedded visualizers */
@@ -56,10 +66,22 @@
   pointer-events: auto;
 }
 
-/* ── Split Layout (side-by-side columns) ──
- * Used in slides 4 and 7 where we compare two ideas.
- * Stacks vertically on mobile.
+/* ── Animated Element Entrances ──
+ * Every h2, p, .eq, etc. inside a slide can animate in
+ * when the slide becomes active. Elements get .anim-in class.
  */
+.slide .anim-target {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+
+.slide .anim-target.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Split Layout ── */
 .split {
   display: flex;
   gap: clamp(1.5rem, 3vw, 4rem);
@@ -75,11 +97,7 @@
   min-width: 16rem;
 }
 
-/* ── Iframe Wrapper ──
- * For slides that are entirely a live visualizer.
- * The iframe fills the viewport; an overlay gradient
- * at the bottom provides context text.
- */
+/* ── Iframe Wrapper ── */
 .iframe-wrap {
   position: absolute;
   inset: 0;
@@ -89,6 +107,40 @@
   width: 100%;
   height: 100%;
   border: none;
+  opacity: 0;
+  transition: opacity 1s var(--ease-out);
+}
+
+.iframe-wrap iframe.loaded {
+  opacity: 1;
+}
+
+/* Iframe loading shimmer */
+.iframe-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(200, 169, 110, 0.04) 40%,
+    rgba(0, 229, 255, 0.04) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  z-index: 5;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.iframe-wrap.loaded::before {
+  opacity: 0;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .iframe-overlay {
@@ -117,11 +169,30 @@
   margin-bottom: 0.3rem;
 }
 
-/* ── HUD Elements ──
- * Always visible regardless of slide. Fixed position
- * with pointer-events: none so they don't interfere
- * with visualizer interaction.
- */
+/* ── Floating Particles Background ── */
+.particle-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: float-particle linear infinite;
+}
+
+@keyframes float-particle {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+/* ── HUD Elements ── */
 .hud-timer {
   position: fixed;
   top: 12px;
@@ -155,11 +226,7 @@
   pointer-events: none;
 }
 
-/* ── Presenter Notes Bar ──
- * Hidden by default. Press N to slide it up from the bottom.
- * Only visible to the presenter — YouTube viewers see the
- * screen share which clips at the window boundary.
- */
+/* ── Presenter Notes Bar ── */
 .notes-bar {
   position: fixed;
   bottom: 0;
@@ -182,10 +249,7 @@
   transform: translateY(0);
 }
 
-/* ── Title Slide Background Animation ──
- * A subtle radial gradient that pulses slowly.
- * Evokes the "looking into deep space" feeling.
- */
+/* ── Title Slide Background Animation ── */
 .title-bg {
   position: absolute;
   inset: 0;
@@ -203,16 +267,36 @@
   transform: translate(-50%, -50%);
   background: radial-gradient(
     ellipse at center,
-    rgba(200, 169, 110, 0.07) 0%,
-    rgba(0, 229, 255, 0.03) 30%,
+    rgba(200, 169, 110, 0.1) 0%,
+    rgba(0, 229, 255, 0.05) 30%,
+    rgba(191, 127, 255, 0.02) 50%,
     transparent 60%
   );
-  animation: pulse 8s ease-in-out infinite alternate;
+  animation: pulse 6s ease-in-out infinite alternate;
+}
+
+.title-bg::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80vmax;
+  height: 80vmax;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(200, 169, 110, 0.06);
+  animation: ring-expand 12s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%   { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 1;   transform: translate(-50%, -50%) scale(1.15); }
+  0%   { opacity: 0.5; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 1;   transform: translate(-50%, -50%) scale(1.2) rotate(3deg); }
+}
+
+@keyframes ring-expand {
+  0%   { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
+  50%  { transform: translate(-50%, -50%) scale(1.2); opacity: 0.08; }
+  100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
 }
 
 .title-content {
@@ -220,11 +304,7 @@
   z-index: 1;
 }
 
-/* ── Mobile Navigation Bar ──
- * A thin strip at the top with prev/next arrows and swipe support.
- * Always sits above iframes so navigation works even on visualizer slides.
- * Hidden on desktop (keyboard handles it).
- */
+/* ── Mobile Navigation Bar ── */
 .nav-bar {
   display: none;
   position: fixed;
@@ -251,12 +331,11 @@
   color: var(--gold);
   cursor: pointer;
   user-select: none;
+  transition: transform 0.2s ease;
 }
 
-.nav-prev:active,
-.nav-next:active {
-  opacity: 0.5;
-}
+.nav-prev:active { transform: scale(0.8) translateX(-4px); }
+.nav-next:active { transform: scale(0.8) translateX(4px); }
 
 .nav-title {
   font-family: 'Space Mono', monospace;
@@ -268,11 +347,7 @@
   pointer-events: none;
 }
 
-/* ── Edge Tap Zones ──
- * Thin invisible strips on left/right screen edges.
- * Tap left edge = prev, tap right edge = next.
- * Sits above iframes (z-index > iframe).
- */
+/* ── Edge Tap Zones ── */
 .edge-zone {
   display: none;
   position: fixed;
@@ -284,21 +359,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.edge-zone.edge-left {
-  left: 0;
-}
-
-.edge-zone.edge-right {
-  right: 0;
-}
+.edge-zone.edge-left { left: 0; }
+.edge-zone.edge-right { right: 0; }
 
 @media (hover: none) and (pointer: coarse) {
-  .nav-bar {
-    display: flex;
-  }
-  .edge-zone {
-    display: block;
-  }
+  .nav-bar { display: flex; }
+  .edge-zone { display: block; }
 }
 
 /* ── Mobile Menu Button ── */
@@ -353,16 +419,19 @@
   padding: 1rem;
   cursor: pointer;
   min-height: 4rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
 
 .slide-overview-item:hover {
   border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px var(--gold-glow);
 }
 
 .slide-overview-item.current {
   border-color: var(--cyan);
+  box-shadow: 0 0 20px var(--cyan-glow);
 }
 
 .slide-overview-num {
@@ -382,15 +451,13 @@
 /* ── Review Mode ── */
 .review-mode .slide {
   transition: opacity 0.05s ease;
+  transform: none !important;
+  filter: none !important;
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .mobile-menu-btn {
-    display: block;
-  }
-  .hud-keys {
-    display: none;
-  }
+  .mobile-menu-btn { display: block; }
+  .hud-keys { display: none; }
   .hud-counter {
     pointer-events: auto;
     font-size: 1rem;
@@ -408,14 +475,9 @@
     padding: 0.8rem;
     min-height: 3.5rem;
   }
-}
-
-/* ── Responsive Adjustments ── */
-@media (max-width: 700px) {
   .split {
     flex-direction: column;
   }
-
   .slide {
     padding: 3vh 4vw;
   }
