@@ -39,6 +39,8 @@
   let notesVisible  = false;
   let timerStart    = null;
   let timerRAF      = null;
+  let reviewMode    = false;
+  let overviewOpen  = false;
 
   /**
    * Navigate to a specific slide by index.
@@ -121,6 +123,34 @@
         goToSlide(currentSlide - 1);
         break;
 
+      case 'Escape':
+        if (overviewOpen) { e.preventDefault(); toggleOverview(); }
+        break;
+
+      case 'g':
+      case 'G':
+        e.preventDefault();
+        toggleOverview();
+        break;
+
+      case 'r':
+      case 'R':
+        e.preventDefault();
+        reviewMode = !reviewMode;
+        if (reviewMode) enterReviewMode();
+        else { document.body.classList.remove('review-mode'); }
+        break;
+
+      case 'Home':
+        e.preventDefault();
+        goToSlide(0);
+        break;
+
+      case 'End':
+        e.preventDefault();
+        goToSlide(total - 1);
+        break;
+
       case 'f':
       case 'F':
         // Toggle fullscreen — essential for screen sharing
@@ -170,6 +200,66 @@
       else        goToSlide(currentSlide - 1);     // Swipe right → prev
     }
   }, { passive: true });
+
+  // ── Slide Overview ──
+  var overviewEl   = document.getElementById('slide-overview');
+  var overviewGrid = document.getElementById('slide-overview-grid');
+
+  function buildOverview() {
+    overviewGrid.innerHTML = '';
+    slides.forEach(function (slide, i) {
+      var item = document.createElement('div');
+      item.className = 'slide-overview-item' + (i === currentSlide ? ' current' : '');
+      var h2 = slide.querySelector('h2');
+      var title = h2 ? h2.textContent : 'Slide ' + (i + 1);
+      item.innerHTML = '<div class="slide-overview-num">' + (i + 1) + ' / ' + total +
+        '</div><div class="slide-overview-title">' + title + '</div>';
+      item.addEventListener('click', function () {
+        goToSlide(i);
+        toggleOverview();
+      });
+      overviewGrid.appendChild(item);
+    });
+  }
+
+  function toggleOverview() {
+    overviewOpen = !overviewOpen;
+    if (overviewOpen) buildOverview();
+    overviewEl.classList.toggle('open', overviewOpen);
+  }
+
+  // ── Review Mode ──
+  function enterReviewMode() {
+    reviewMode = true;
+    document.body.classList.add('review-mode');
+    slides.forEach(function (slide) {
+      slide.querySelectorAll('.shell-card, .sigma-step, .sigma-arrow').forEach(function (el) {
+        el.classList.add('show');
+      });
+      slide.querySelectorAll('.bar-fill').forEach(function (bar) {
+        if (bar.dataset.h) bar.style.height = bar.dataset.h + 'px';
+      });
+    });
+  }
+
+  // ── Mobile: tap MENU or counter to open slide grid ──
+  var menuBtn = document.getElementById('mobile-menu-btn');
+  if (menuBtn) {
+    menuBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleOverview();
+    });
+  }
+  counter.style.cursor = 'pointer';
+  counter.addEventListener('click', function (e) {
+    e.stopPropagation();
+    toggleOverview();
+  });
+
+  // ── Auto-enable review mode on touch devices ──
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    enterReviewMode();
+  }
 
   // ── Initialize ──
   // Set up the first slide and populate initial notes
