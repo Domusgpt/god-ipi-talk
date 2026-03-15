@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>28 Rotation Planes — Holographic Moir&eacute; &middot; G.O.D. Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;1,200&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c8a96e;--gold-g:rgba(200,169,110,0.35);--orange:#ff6b35;--cyan:#00e5ff;--purple:#bf7fff;--red:#ff3355;--green:#44ff88;--white:#e8f0f4;--deep:#020205;--panel:rgba(3,3,8,0.94);--border:rgba(200,169,110,0.15);--text:#e8f0f4;--text-dim:#7a7a8a;--mono:'Space Mono',monospace;--serif:'Crimson Pro',serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--text);font-family:var(--serif);touch-action:none}
+canvas#cv{position:fixed;top:0;left:0;width:100%;height:100%;display:block;cursor:grab;z-index:0}
+canvas#cv:active{cursor:grabbing}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;gap:0.5rem;padding:0 1rem;height:40px;background:rgba(2,2,5,0.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(200,169,110,0.08)}
+.topbar a{color:var(--text-dim);text-decoration:none;font:600 0.6rem var(--mono);letter-spacing:0.1em}
+.topbar a:hover{color:var(--gold)}
+.topbar-title{font:400 0.5rem var(--mono);color:var(--gold);letter-spacing:0.18em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-spacer{flex:1}
+.topbar-info{font:400 0.42rem var(--mono);color:var(--text-dim)}
+
+.hud{position:fixed;z-index:100;pointer-events:none}
+.hud-tl{top:50px;left:12px;max-width:260px}
+.hud-tr{top:50px;right:12px;text-align:right;max-width:260px}
+.hud-bl{bottom:70px;left:12px;max-width:300px}
+.hud-br{bottom:70px;right:12px;text-align:right;max-width:260px}
+.hud-item{font:400 0.48rem var(--mono);opacity:0.75;margin-bottom:2px;text-shadow:0 0 8px currentColor}
+.hud-gold{color:var(--gold)}.hud-cyan{color:var(--cyan)}.hud-purple{color:var(--purple)}.hud-orange{color:var(--orange)}.hud-dim{color:var(--text-dim);opacity:0.45}
+
+.drawer-handle{position:fixed;bottom:0;left:0;right:0;z-index:300;display:flex;flex-direction:column;align-items:center}
+.drawer-tab{display:flex;align-items:center;gap:0.5rem;width:100%;padding:8px 12px;background:var(--panel);border-top:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.grip{width:36px;height:4px;border-radius:2px;background:rgba(200,169,110,0.25)}
+.mode-scroll{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mode-scroll::-webkit-scrollbar{display:none}
+.mode-btn{font:400 0.45rem var(--mono);letter-spacing:0.06em;padding:5px 9px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0}
+.mode-btn.active{background:rgba(200,169,110,0.15);border-color:var(--gold);color:var(--gold);box-shadow:0 0 12px rgba(200,169,110,0.12)}
+.drawer-body{width:100%;max-height:0;overflow:hidden;overflow-y:auto;background:var(--panel);transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);-webkit-overflow-scrolling:touch}
+.drawer-body.open{max-height:55vh}
+.drawer-body::-webkit-scrollbar{width:3px}
+.drawer-body::-webkit-scrollbar-thumb{background:rgba(200,169,110,0.15)}
+.drawer-inner{padding:12px 16px 24px}
+.acc{border-bottom:1px solid rgba(200,169,110,0.06)}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:9px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.acc-head h3{font:400 0.5rem var(--mono);letter-spacing:0.2em;color:var(--gold);text-transform:uppercase}
+.acc-arrow{font-size:0.6rem;color:var(--text-dim);transition:transform 0.2s}
+.acc.open .acc-arrow{transform:rotate(180deg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+.acc.open .acc-body{max-height:800px}
+.acc-content{padding:0 0 12px}
+.math-box{font:400 0.55rem var(--mono);color:var(--gold);line-height:1.9;padding:8px 10px;background:rgba(200,169,110,0.04);border:1px solid rgba(200,169,110,0.12);border-radius:3px;margin-bottom:6px}
+.ctrl-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ctrl-lbl{font:400 0.45rem var(--mono);color:var(--text-dim);min-width:60px;letter-spacing:0.08em}
+input[type=range]{flex:1;accent-color:var(--gold);height:18px}
+.ctrl-val{font:400 0.45rem var(--mono);color:var(--gold);min-width:28px;text-align:right}
+.toggle-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.tog-btn{font:400 0.42rem var(--mono);padding:4px 7px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;transition:all 0.15s}
+.tog-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(200,169,110,0.1)}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px}
+.metric{padding:5px 6px;background:rgba(255,255,255,0.015);border:1px solid var(--border);border-radius:3px}
+.metric-label{font:400 0.38rem var(--mono);letter-spacing:0.1em;color:var(--text-dim);margin-bottom:1px}
+.metric-value{font:300 0.7rem var(--serif);color:var(--text)}
+
+@media(min-width:1025px){
+  .drawer-handle{display:none}
+  .desktop-sb{display:block!important;position:fixed;top:40px;right:0;bottom:0;width:320px;z-index:150;overflow-y:auto;background:var(--panel);border-left:1px solid var(--border);padding:12px 16px}
+  .desktop-sb.collapsed{transform:translateX(100%)}
+  .desktop-sb::-webkit-scrollbar{width:3px}
+  .desk-toggle{display:flex!important}
+}
+@media(max-width:1024px){.desktop-sb{display:none!important}.desk-toggle{display:none!important}}
+.desk-toggle{position:fixed;top:48px;right:8px;z-index:200;font:400 0.5rem var(--mono);padding:4px 8px;border:1px solid var(--border);background:rgba(2,2,5,0.8);color:var(--text-dim);border-radius:3px;cursor:pointer;display:none}
+.desk-toggle:hover{color:var(--gold);border-color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="../index.html">&larr; G.O.D.</a>
+  <span class="topbar-title">28 ROTATION PLANES &middot; HOLOGRAPHIC MOIR&Eacute;</span>
+  <span class="topbar-spacer"></span>
+  <span class="topbar-info" id="t-info">240 ROOTS &middot; 6 SHELLS &middot; 28 PLANES</span>
+</div>
+<canvas id="cv"></canvas>
+
+<div class="hud hud-tl">
+  <div class="hud-item hud-gold" id="hud-mode">MOIR&Eacute; HOLOGRAM</div>
+  <div class="hud-item hud-dim" id="hud-sub">28 planes &middot; 240 roots &middot; 6 shells</div>
+</div>
+<div class="hud hud-tr">
+  <div class="hud-item hud-orange" id="hud-d8">D8: 112 integer</div>
+  <div class="hud-item hud-cyan" id="hud-sp">S+: 128 spinor</div>
+  <div class="hud-item hud-dim" id="hud-ratio">S+/D8 = 8/7</div>
+</div>
+<div class="hud hud-bl">
+  <div class="hud-item hud-dim" id="hud-chain">&sigma;(28)=56 &middot; &sigma;(56)=120 &middot; &sigma;(120)=360</div>
+  <div class="hud-item hud-dim" id="hud-info">I<sub>total</sub> = log&sub2;(240) = 7.91 bits</div>
+</div>
+<div class="hud hud-br">
+  <div class="hud-item hud-purple" id="hud-phi">&phi; = 1.618034 &middot; &delta; = 0.22361</div>
+  <div class="hud-item hud-dim" id="hud-convex">S = &delta;&middot;&phi;&sup3; = 0.947</div>
+</div>
+
+<!-- MOBILE DRAWER -->
+<div class="drawer-handle">
+  <div class="drawer-tab" onclick="document.getElementById('drawer').classList.toggle('open')">
+    <div class="grip"></div>
+    <div class="mode-scroll" id="mode-bar"></div>
+  </div>
+  <div class="drawer-body" id="drawer"><div class="drawer-inner" id="mob-panels"></div></div>
+</div>
+
+<!-- DESKTOP SIDEBAR -->
+<div class="desktop-sb" id="desktop-sb" style="display:none"></div>
+<button class="desk-toggle" onclick="document.getElementById('desktop-sb').classList.toggle('collapsed')">PANEL</button>
+
+<script>
+// =====================================================================
+//  G.O.D. FRAMEWORK — 28 ROTATION PLANES · HOLOGRAPHIC MOIRÉ
+//
+//  Actual E8 root system: 240 roots (112 D8 + 128 S+)
+//  Cross-parity Coxeter projection B_CP: R^8 → R^4 → screen
+//  6 palindromic shells: (24, 56, 40, 40, 56, 24)
+//  28 rotation planes as large translucent discs creating moiré
+//  Clifford tori T²=S¹×S¹ from orthogonal plane pairs
+// =====================================================================
+
+const PHI = (1+Math.sqrt(5))/2;
+const SQRT5 = Math.sqrt(5);
+const DELTA = SQRT5/10;  // 0.22361 shell quantum
+
+// ============ BUILD THE ACTUAL E8 ROOT SYSTEM ============
+const roots = [];
+
+// D8 roots: e_i ± e_j (112 roots) — integer type
+for(let i=0;i<8;i++) for(let j=i+1;j<8;j++){
+  for(let si of [-1,1]) for(let sj of [-1,1]){
+    const v = new Float64Array(8);
+    v[i]=si; v[j]=sj;
+    // even coordinate sum check: si+sj must be even
+    if((si+sj)%2===0) roots.push({v, type:'D8'});
+  }
+}
+
+// S+ roots: (±1/2,...,±1/2) with even number of minus signs (128 roots)
+for(let mask=0;mask<256;mask++){
+  let neg=0;
+  for(let b=0;b<8;b++) if(mask&(1<<b)) neg++;
+  if(neg%2===0){
+    const v = new Float64Array(8);
+    for(let b=0;b<8;b++) v[b]=(mask&(1<<b))?-0.5:0.5;
+    roots.push({v, type:'S+'});
+  }
+}
+
+// ============ CROSS-PARITY COXETER PROJECTION ============
+// Approximate B_CP using eigenplanes m=1,11 of Coxeter element
+// The projection matrix for E8 → 4D uses cos/sin of 2πm/30
+// For visualization we use a well-known E8 projection to 4D
+// then project 4D → 2D screen with rotation
+
+const h = 30; // Coxeter number
+// Projection vectors from eigenplanes m=1 and m=11
+function projVector(m, phase){
+  const v = new Float64Array(8);
+  const exponents = [1,7,11,13,17,19,23,29];
+  for(let i=0;i<8;i++){
+    v[i] = Math.cos(2*Math.PI*m*exponents[i]/h + phase);
+  }
+  // normalize
+  let norm = 0;
+  for(let i=0;i<8;i++) norm += v[i]*v[i];
+  norm = Math.sqrt(norm);
+  for(let i=0;i<8;i++) v[i] /= norm;
+  return v;
+}
+
+// 4 projection basis vectors (2 eigenplanes × 2 components)
+const B = [
+  projVector(1, 0),
+  projVector(1, Math.PI/2),
+  projVector(11, 0),
+  projVector(11, Math.PI/2),
+];
+
+// Orthonormalize via Gram-Schmidt
+function gramSchmidt(basis){
+  const result = [];
+  for(let i=0;i<basis.length;i++){
+    const v = Float64Array.from(basis[i]);
+    for(let j=0;j<result.length;j++){
+      let dot=0;
+      for(let k=0;k<v.length;k++) dot+=v[k]*result[j][k];
+      for(let k=0;k<v.length;k++) v[k]-=dot*result[j][k];
+    }
+    let norm=0;
+    for(let k=0;k<v.length;k++) norm+=v[k]*v[k];
+    norm=Math.sqrt(norm);
+    if(norm>1e-10) for(let k=0;k<v.length;k++) v[k]/=norm;
+    result.push(v);
+  }
+  return result;
+}
+const PROJ = gramSchmidt(B);
+
+// Project each root to 4D, compute shell index
+function dot8(a,b){let s=0;for(let i=0;i<8;i++)s+=a[i]*b[i];return s;}
+
+for(const root of roots){
+  // 4D projected coordinates
+  root.p4 = [dot8(root.v,PROJ[0]),dot8(root.v,PROJ[1]),dot8(root.v,PROJ[2]),dot8(root.v,PROJ[3])];
+  // Projected norm squared
+  root.r2 = root.p4[0]*root.p4[0]+root.p4[1]*root.p4[1]+root.p4[2]*root.p4[2]+root.p4[3]*root.p4[3];
+  // Shell index: r² ≈ 1 + k√5/10, so k ≈ (r² - 1) / (√5/10)
+  root.kRaw = (root.r2 - 1) / (SQRT5/10);
+  root.k = Math.round(root.kRaw);
+  if(root.k === 0) root.k = root.kRaw > 0 ? 1 : -1; // no k=0 shell
+}
+
+// Verify shell populations
+const shellPops = {};
+for(const r of roots){
+  shellPops[r.k] = (shellPops[r.k]||0)+1;
+}
+
+// ============ 28 ROTATION PLANES ============
+const PLANES28 = [];
+for(let i=0;i<8;i++) for(let j=i+1;j<8;j++) PLANES28.push([i,j]);
+
+// Classify pairs
+const ORTH_PAIRS=[], NONORTH_PAIRS=[];
+for(let a=0;a<28;a++) for(let b=a+1;b<28;b++){
+  const pa=PLANES28[a],pb=PLANES28[b];
+  const shared=pa[0]===pb[0]||pa[0]===pb[1]||pa[1]===pb[0]||pa[1]===pb[1];
+  (shared?NONORTH_PAIRS:ORTH_PAIRS).push([a,b]);
+}
+
+// ============ PRE-COMPUTE ROOT NEIGHBORS (inner product = 1) ============
+for(const r of roots) r.neighbors=[];
+for(let i=0;i<roots.length;i++) for(let j=i+1;j<roots.length;j++){
+  const d=dot8(roots[i].v,roots[j].v);
+  if(Math.abs(d-1)<0.01){roots[i].neighbors.push(j);roots[j].neighbors.push(i);}
+}
+
+// ============ STATE ============
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+let W,H,cx,cy,t=0;
+let camRX=0.2,camRY=0.0,autoRot=0.06;
+let zoom=1.0,speed=0.5,glowAmt=0.75;
+let planeAlpha=0.04,planeScale=1.4;
+let showRoots=true,showPlanes=true,showTorus=true,showBeams=true;
+let showCrystal=true,showGap=true,showOrbit=true;
+let chiralDir=1;
+let show24Cell=true;
+let showGoldenLines=true;
+let mode=0;
+const MODES=['CASCADE','SHELLS','\u03c3-CHAIN','CHIRAL'];
+const pointers=new Map();
+let lastPinch=0;
+const GAP_ANGLE=2*Math.PI*0.053; // 5.3% = 19.1° convexity gap
+const S_CONVEX=DELTA*PHI*PHI*PHI; // 0.947
+let spinorStep=0,spinorTimer=0;
+
+// ============ BEAM PARTICLE POOL ============
+const RAYS_PER_PLANE=8;
+const beamParticles=[];
+for(let p=0;p<28;p++) for(let r=0;r<RAYS_PER_PLANE;r++){
+  beamParticles.push({
+    plane:p, angle:(r/RAYS_PER_PLANE)*Math.PI*2,
+    progress:(r/RAYS_PER_PLANE+p/28)%1, // staggered
+    speed:0.12+p*0.003+r*0.002,
+  });
+}
+
+// Pre-project plane basis vectors to 4D (once)
+const planeBasis4D=PLANES28.map(([ai,aj])=>{
+  const ei=new Float64Array(8);ei[ai]=1;
+  const ej=new Float64Array(8);ej[aj]=1;
+  return{
+    ui:[dot8(ei,PROJ[0]),dot8(ei,PROJ[1]),dot8(ei,PROJ[2]),dot8(ei,PROJ[3])],
+    uj:[dot8(ej,PROJ[0]),dot8(ej,PROJ[1]),dot8(ej,PROJ[2]),dot8(ej,PROJ[3])],
+    ai,aj
+  };
+});
+
+// ============ 24-CELL: SELF-DUAL CLOSURE ============
+// 24 vertices of the 24-cell (binary tetrahedral group 2T)
+// In 4D: all permutations of (±1,0,0,0) [8 verts] + (±1/2,±1/2,±1/2,±1/2) [16 verts] = 24
+const cell24Verts=[];
+// 8 axis-aligned vertices
+for(let ax=0;ax<4;ax++) for(const s of [-1,1]){
+  const v=[0,0,0,0];v[ax]=s;cell24Verts.push(v);
+}
+// 16 half-integer vertices (all ±1/2 combos)
+for(let mask=0;mask<16;mask++){
+  const v=[];
+  for(let b=0;b<4;b++) v.push(mask&(1<<b)?-0.5:0.5);
+  cell24Verts.push(v);
+}
+// 24-cell edges: connect vertices with inner product = 1/2 (distance² = 1)
+const cell24Edges=[];
+for(let i=0;i<24;i++) for(let j=i+1;j<24;j++){
+  let d2=0;for(let c=0;c<4;c++) d2+=(cell24Verts[i][c]-cell24Verts[j][c])**2;
+  if(Math.abs(d2-1)<0.01) cell24Edges.push([i,j]);
+}
+// Scale 24-cell to sit at the core
+const CELL24_SCALE=0.18;
+
+// ============ GOLDEN RATIO CONVEXITY SPIRALS ============
+// phi spiral: r(theta) = delta * phi^(theta/2pi) showing convexity closure
+// S = delta * phi^3 = 0.947 — the spiral reaches 94.7% at 3 full turns
+const PLASTIC = 1.3247179572; // plastic ratio rho (real root of x³=x+1)
+
+// ============ CANVAS + POINTER ============
+function resize(){
+  const dpr=Math.min(devicePixelRatio||1,2);
+  W=innerWidth;H=innerHeight;
+  cv.width=W*dpr;cv.height=H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  cx=W/2;cy=H/2;
+}
+addEventListener('resize',resize);resize();
+
+cv.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId))return;
+  const p=pointers.get(e.pointerId);
+  if(pointers.size===1){camRY+=(e.clientX-p.x)*0.004;camRX+=(e.clientY-p.y)*0.004;camRX=Math.max(-1.5,Math.min(1.5,camRX));}
+  else if(pointers.size===2){const pts=[...pointers.values()];const d=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);if(lastPinch>0)zoom=Math.max(0.3,Math.min(5,zoom*(d/lastPinch)));lastPinch=d;}
+  p.x=e.clientX;p.y=e.clientY;
+});
+cv.addEventListener('pointerup',e=>{pointers.delete(e.pointerId);if(pointers.size<2)lastPinch=0;});
+cv.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);if(pointers.size<2)lastPinch=0;});
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(0.3,Math.min(5,zoom*(1-e.deltaY*0.001)));},{passive:false});
+
+// ============ 3D/4D PROJECTION ============
+function rot3(x,y,z,ry,rx){
+  let c=Math.cos(ry),s=Math.sin(ry);
+  let nx=x*c-z*s,nz=x*s+z*c;
+  c=Math.cos(rx);s=Math.sin(rx);
+  let ny=y*c-nz*s;nz=y*s+nz*c;
+  return[nx,ny,nz];
+}
+
+
+function projectToScreen(p4, time){
+  const w4=p4[3];
+  const wRot=time*0.15*chiralDir;
+  const cw=Math.cos(wRot),sw=Math.sin(wRot);
+  const x4=p4[0]*cw-w4*sw;
+  const z4=p4[2];
+  const w4r=p4[0]*sw+w4*cw;
+  const[rx,ry,rz]=rot3(x4,p4[1],z4,camRY+time*autoRot,camRX);
+  const sc=zoom*Math.min(W,H)*0.32;
+  const persp=800/(800+rz+w4r*0.3);
+  return{x:cx+rx*sc*persp,y:cy+ry*sc*persp,z:rz+w4r*0.3,s:persp,w:w4r};
+}
+
+// ============ DRAWING HELPERS ============
+function fillGlow(x,y,r,rgb,a){
+  if(a<0.004||r<0.3)return;
+  ctx.globalAlpha=a;
+  ctx.fillStyle=`rgb(${rgb})`;
+  ctx.beginPath();ctx.arc(x,y,r*0.6,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+}
+function txt(s,x,y,col,sz,al){
+  ctx.font=`400 ${sz}px 'Space Mono',monospace`;
+  ctx.fillStyle=col;ctx.textAlign=al||'center';ctx.textBaseline='middle';
+  ctx.shadowColor=col;ctx.shadowBlur=4;
+  ctx.fillText(s,x,y);ctx.shadowBlur=0;
+}
+
+// Angle from screen center
+function screenAngle(sx,sy){return Math.atan2(sy-cy,sx-cx);}
+// Check if angle falls in convexity gap
+function inGap(angle,time){
+  const gs=time*0.02*chiralDir;
+  let da=((angle-gs)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+  return da<GAP_ANGLE;
+}
+
+// ============ BEAM PARTICLES: UPDATE ============
+function updateBeams(dt){
+  for(const bp of beamParticles){
+    bp.progress+=bp.speed*dt*speed;
+    if(bp.progress>=1) bp.progress-=1;
+  }
+}
+
+// ============ BEAM PARTICLES: DRAW (CASCADE INWARD) ============
+function drawBeamCascade(time){
+  const R=planeScale*0.6;
+  for(const bp of beamParticles){
+    const pb=planeBasis4D[bp.plane];
+    const spin=time*(0.08+pb.ai*0.015+pb.aj*0.01)*chiralDir;
+    const ca=Math.cos(bp.angle+spin)*R,sa=Math.sin(bp.angle+spin)*R;
+
+    // Head position: lerp from plane edge (progress=0) to center (progress=1)
+    const prog=bp.progress;
+    const tail=Math.max(0,prog-0.08);
+    const isD8=(pb.ai%2===pb.aj%2);
+    const rgb=isD8?'220,170,90':'60,200,240';
+
+    // Alpha: peaks mid-journey, fades at edges
+    let alpha=Math.sin(prog*Math.PI)*0.35;
+
+    // 4D positions for head and tail
+    const h4=[],t4=[];
+    for(let c=0;c<4;c++){
+      const edge=ca*pb.ui[c]+sa*pb.uj[c];
+      h4[c]=edge*(1-prog);
+      t4[c]=edge*(1-tail);
+    }
+    const hp=projectToScreen(h4,time);
+    const tp=projectToScreen(t4,time);
+
+    // Dim beams in convexity gap
+    if(showGap&&inGap(screenAngle(hp.x,hp.y),time)) alpha*=0.15;
+
+    if(alpha<0.01)continue;
+
+    // Draw beam segment
+    const g=ctx.createLinearGradient(tp.x,tp.y,hp.x,hp.y);
+    g.addColorStop(0,`rgba(${rgb},0)`);
+    g.addColorStop(0.3,`rgba(${rgb},${alpha*0.5})`);
+    g.addColorStop(1,`rgba(${rgb},${alpha})`);
+    ctx.strokeStyle=g;
+    ctx.lineWidth=1.2*hp.s;
+    ctx.shadowColor=`rgba(${rgb},${alpha*0.3*glowAmt})`;
+    ctx.shadowBlur=glowAmt*4;
+    ctx.beginPath();ctx.moveTo(tp.x,tp.y);ctx.lineTo(hp.x,hp.y);ctx.stroke();
+    ctx.shadowBlur=0;
+
+    // Bright head dot
+    fillGlow(hp.x,hp.y,2.5*hp.s,rgb,alpha*0.6);
+  }
+}
+
+// ============ INTERFERENCE ZONES ============
+function drawInterference(time){
+  // Destructive: non-orthogonal (dark dimming zones, flickering)
+  for(let i=0;i<NONORTH_PAIRS.length;i+=4){
+    const[a,b]=NONORTH_PAIRS[i];
+    const pba=planeBasis4D[a],pbb=planeBasis4D[b];
+    const mid4=[0,0,0,0];
+    for(let c=0;c<4;c++) mid4[c]=(pba.ui[c]+pba.uj[c]+pbb.ui[c]+pbb.uj[c])*0.04;
+    const sp=projectToScreen(mid4,time);
+    const flicker=0.5+0.5*Math.sin(time*3+i*0.7);
+    const r=12*sp.s*zoom;
+    // Dark cancellation zone
+    const g=ctx.createRadialGradient(sp.x,sp.y,0,sp.x,sp.y,r);
+    g.addColorStop(0,`rgba(0,0,0,${0.08*flicker})`);
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(sp.x,sp.y,r,0,Math.PI*2);ctx.fill();
+    // Faint red cross at cancellation point
+    fillGlow(sp.x,sp.y,r*0.3,'255,40,60',0.04*flicker*glowAmt);
+  }
+
+  // Constructive: orthogonal (bright reinforcement zones)
+  for(let i=0;i<ORTH_PAIRS.length;i+=5){
+    const[a,b]=ORTH_PAIRS[i];
+    const pba=planeBasis4D[a],pbb=planeBasis4D[b];
+    const mid4=[0,0,0,0];
+    for(let c=0;c<4;c++) mid4[c]=(pba.ui[c]+pba.uj[c]+pbb.ui[c]+pbb.uj[c])*0.04;
+    const sp=projectToScreen(mid4,time);
+    const pulse=0.6+0.4*Math.sin(time*2+i*0.5);
+    const r=10*sp.s*zoom;
+    fillGlow(sp.x,sp.y,r,'180,220,255',0.035*pulse*glowAmt);
+  }
+}
+
+// ============ MOIRÉ PLANES (with spokes + rings) ============
+function drawMoirePlane(planeIdx,time){
+  const pb=planeBasis4D[planeIdx];
+  const R=planeScale*0.6;
+  const segs=32;
+  const spin=time*(0.08+pb.ai*0.015+pb.aj*0.01)*chiralDir;
+  const cs=Math.cos(spin),sn=Math.sin(spin);
+  const pts=[];
+  let avgZ=0;
+
+  for(let s=0;s<=segs;s++){
+    const a=(s/segs)*Math.PI*2;
+    const ca=Math.cos(a)*R,sa=Math.sin(a)*R;
+    const lx=ca*cs-sa*sn,ly=ca*sn+sa*cs;
+    const p4=[];for(let c=0;c<4;c++) p4[c]=lx*pb.ui[c]+ly*pb.uj[c];
+    const sp=projectToScreen(p4,time);
+    pts.push(sp);avgZ+=sp.z;
+  }
+  avgZ/=pts.length;
+
+  const isD8=(pb.ai%2===pb.aj%2);
+  const rgb=isD8?'200,150,80':'50,180,220';
+  const edgeRgb=isD8?'220,175,95':'65,200,240';
+
+  return{avgZ,draw:()=>{
+    // Filled translucent disc
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.closePath();
+    ctx.fillStyle=`rgba(${rgb},${planeAlpha})`;
+    ctx.fill();
+    ctx.strokeStyle=`rgba(${edgeRgb},${planeAlpha*3.5})`;
+    ctx.lineWidth=0.5;
+    ctx.shadowColor=`rgba(${edgeRgb},${planeAlpha*2*glowAmt})`;
+    ctx.shadowBlur=glowAmt*6;
+    ctx.stroke();ctx.shadowBlur=0;
+
+    // SPOKES (create moiré when overlapping)
+    const spokeCount=8;
+    for(let s=0;s<spokeCount;s++){
+      const a=(s/spokeCount)*Math.PI+spin;
+      const ac=Math.cos(a),as2=Math.sin(a);
+      const p1=[],p2=[];
+      for(let c=0;c<4;c++){
+        const d=ac*pb.ui[c]+as2*pb.uj[c];
+        p1[c]=d*R;p2[c]=-d*R;
+      }
+      const sp1=projectToScreen(p1,time),sp2=projectToScreen(p2,time);
+      ctx.strokeStyle=`rgba(${edgeRgb},${planeAlpha*2})`;
+      ctx.lineWidth=0.3;
+      ctx.beginPath();ctx.moveTo(sp1.x,sp1.y);ctx.lineTo(sp2.x,sp2.y);ctx.stroke();
+    }
+
+    // CONCENTRIC RINGS (circular moiré)
+    for(let ring=1;ring<=3;ring++){
+      const rr=R*(ring/4);
+      ctx.beginPath();
+      for(let s=0;s<=20;s++){
+        const a=(s/20)*Math.PI*2;
+        const ca2=Math.cos(a+spin)*rr,sa2=Math.sin(a+spin)*rr;
+        const p4=[];for(let c=0;c<4;c++) p4[c]=ca2*pb.ui[c]+sa2*pb.uj[c];
+        const sp=projectToScreen(p4,time);
+        s===0?ctx.moveTo(sp.x,sp.y):ctx.lineTo(sp.x,sp.y);
+      }
+      ctx.strokeStyle=`rgba(${edgeRgb},${planeAlpha*1.5})`;
+      ctx.lineWidth=0.25;
+      ctx.stroke();
+    }
+
+    // CHIRALITY ARROW on nearest planes
+    if(pts[0].s>0.85){
+      const aIdx=Math.floor(segs*0.2);
+      const bIdx=Math.floor(segs*0.25);
+      const cIdx=Math.floor(segs*0.3);
+      const arrowRgb=chiralDir>0?'200,169,110':'255,80,100';
+      ctx.strokeStyle=`rgba(${arrowRgb},${planeAlpha*8})`;
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.moveTo(pts[aIdx].x,pts[aIdx].y);
+      ctx.lineTo(pts[bIdx].x,pts[bIdx].y);
+      ctx.lineTo(pts[cIdx].x,pts[cIdx].y);
+      ctx.stroke();
+      // Arrowhead
+      fillGlow(pts[cIdx].x,pts[cIdx].y,4,arrowRgb,0.5);
+    }
+  }};
+}
+
+// ============ 24-CELL VOID CORE ============
+function draw24Cell(time){
+  if(!show24Cell)return;
+  const pulse=0.6+0.4*Math.sin(time*1.2);
+  const spin24=time*0.25*chiralDir;
+  const cs24=Math.cos(spin24),sn24=Math.sin(spin24);
+  const sc=CELL24_SCALE*zoom;
+
+  // Project 24-cell vertices to screen
+  const projected=cell24Verts.map(v=>{
+    // Rotate in 4D (xw plane) then project
+    const rx=v[0]*cs24-v[3]*sn24;
+    const rw=v[0]*sn24+v[3]*cs24;
+    const p4=[rx*sc,v[1]*sc,v[2]*sc,rw*sc];
+    return projectToScreen(p4,time);
+  });
+
+  // Draw edges first (crystalline lattice)
+  ctx.lineWidth=0.7;
+  for(const[i,j] of cell24Edges){
+    const a=projected[i],b=projected[j];
+    const dist=Math.hypot(a.x-b.x,a.y-b.y);
+    if(dist>300*zoom||dist<1)continue;
+    const depth=Math.min(a.s,b.s);
+    const alpha=depth*0.25*pulse;
+    if(alpha<0.01)continue;
+
+    // Edge color: gold for axis verts, cyan for half-integer
+    const isAxis=(i<8&&j<8);
+    const isMixed=(i<8)!==(j<8);
+    const rgb=isAxis?'220,180,100':isMixed?'180,200,150':'80,200,240';
+
+    ctx.strokeStyle=`rgba(${rgb},${alpha})`;
+    ctx.shadowColor=`rgba(${rgb},${alpha*0.5*glowAmt})`;
+    ctx.shadowBlur=glowAmt*6;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  }
+  ctx.shadowBlur=0;
+
+  // Draw vertices
+  for(let i=0;i<24;i++){
+    const p=projected[i];
+    const isAxis=i<8;
+    const rgb=isAxis?'255,200,120':'100,220,255';
+    const sz=(isAxis?3.5:2.8)*p.s*zoom*pulse;
+
+    // Hexagonal facet shape for crystalline look
+    ctx.fillStyle=`rgba(${rgb},${p.s*0.6*pulse})`;
+    ctx.beginPath();
+    for(let h=0;h<6;h++){
+      const ha=h*Math.PI/3+time*0.4;
+      const hx=p.x+Math.cos(ha)*sz,hy=p.y+Math.sin(ha)*sz;
+      h===0?ctx.moveTo(hx,hy):ctx.lineTo(hx,hy);
+    }
+    ctx.closePath();ctx.fill();
+
+    // Inner glow
+    fillGlow(p.x,p.y,sz*2,rgb,p.s*0.15*pulse*glowAmt);
+  }
+
+  // Central void label
+  const coreGlow=pulse*0.04*glowAmt;
+  fillGlow(cx,cy,55*zoom*pulse,'200,169,110',coreGlow);
+  fillGlow(cx,cy,25*zoom*pulse,'255,255,255',coreGlow*0.4);
+  txt('24-cell',cx,cy+35*zoom*pulse,'rgba(200,169,110,0.3)',7);
+  txt('self-dual void',cx,cy+47*zoom*pulse,'rgba(200,169,110,0.18)',5.5);
+}
+
+// ============ GOLDEN/PLASTIC RATIO CONVEXITY LINES ============
+function drawGoldenLines(time){
+  if(!showGoldenLines)return;
+  const maxR=Math.min(W,H)*0.38*zoom;
+  const gs=time*0.02*chiralDir;
+
+  // Golden spiral: r = delta * phi^(theta/2pi)
+  // Shows how convexity closes: 3 turns = phi^3 * delta = S = 0.947
+  ctx.lineWidth=0.8;
+  const spiralPts=200;
+
+  // PHI spiral (golden ratio)
+  ctx.beginPath();
+  for(let i=0;i<=spiralPts;i++){
+    const frac=i/spiralPts;
+    const theta=frac*Math.PI*6+gs; // 3 full turns
+    const rNorm=DELTA*Math.pow(PHI,frac*3); // delta*phi^(turns)
+    const r=rNorm*maxR/S_CONVEX; // normalize so S fills maxR
+    const x=cx+Math.cos(theta)*r,y=cy+Math.sin(theta)*r;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle='rgba(220,180,90,0.12)';
+  ctx.shadowColor='rgba(220,180,90,0.06)';
+  ctx.shadowBlur=glowAmt*4;
+  ctx.stroke();ctx.shadowBlur=0;
+
+  // Mark phi, phi^2, phi^3 radii as concentric circles
+  const phiMarks=[
+    {exp:1,label:'\u03c6',val:PHI},
+    {exp:2,label:'\u03c6\u00b2',val:PHI*PHI},
+    {exp:3,label:'\u03c6\u00b3',val:PHI*PHI*PHI},
+  ];
+  ctx.setLineDash([2,6]);
+  for(const m of phiMarks){
+    const r=DELTA*m.val*maxR/S_CONVEX;
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    const isS=(m.exp===3);
+    ctx.strokeStyle=isS?'rgba(220,180,90,0.18)':'rgba(220,180,90,0.07)';
+    ctx.lineWidth=isS?1.2:0.5;
+    ctx.stroke();
+    const la=gs+m.exp*0.8;
+    txt(`\u03b4\u00b7${m.label}${isS?' = S':''}`,
+      cx+Math.cos(la)*(r+14),cy+Math.sin(la)*(r+14),
+      `rgba(220,180,90,${isS?0.4:0.2})`,isS?7:5.5);
+  }
+  ctx.setLineDash([]);
+
+  // PLASTIC ratio spiral (rho = 1.3247, x^3=x+1) — different chirality
+  ctx.beginPath();
+  for(let i=0;i<=spiralPts;i++){
+    const frac=i/spiralPts;
+    const theta=-frac*Math.PI*6+gs; // opposite winding
+    const rNorm=DELTA*Math.pow(PLASTIC,frac*3);
+    const r=rNorm*maxR/S_CONVEX;
+    const x=cx+Math.cos(theta)*r,y=cy+Math.sin(theta)*r;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle='rgba(100,180,240,0.08)';
+  ctx.shadowColor='rgba(100,180,240,0.04)';
+  ctx.shadowBlur=glowAmt*3;
+  ctx.stroke();ctx.shadowBlur=0;
+
+  // delta marker at center
+  const dR=DELTA*maxR/S_CONVEX;
+  ctx.beginPath();ctx.arc(cx,cy,dR,0,Math.PI*2);
+  ctx.strokeStyle='rgba(191,127,255,0.12)';ctx.lineWidth=0.8;
+  ctx.setLineDash([1,3]);ctx.stroke();ctx.setLineDash([]);
+  txt('\u03b4 = \u221a5/10',cx+Math.cos(gs-0.5)*(dR+14),cy+Math.sin(gs-0.5)*(dR+14),'rgba(191,127,255,0.3)',5.5);
+}
+
+// ============ PLANE INTERSECTION LATTICE ============
+function drawPlaneIntersectionLattice(time){
+  // Where orthogonal plane pairs intersect, draw lattice nodes
+  // Each orth pair's midpoint in 4D projected creates a lattice vertex
+  // Connect nearby lattice points → geometric 3D lattice at center
+  const latticeNodes=[];
+  const scFactor=0.08;
+
+  for(let i=0;i<ORTH_PAIRS.length;i+=3){
+    const[a,b]=ORTH_PAIRS[i];
+    const pba=planeBasis4D[a],pbb=planeBasis4D[b];
+    // Intersection point: orthogonal pair average direction
+    const p4=[];
+    for(let c=0;c<4;c++) p4[c]=(pba.ui[c]+pba.uj[c]+pbb.ui[c]+pbb.uj[c])*scFactor;
+    const sp=projectToScreen(p4,time);
+    latticeNodes.push({sp,pairIdx:i,a,b});
+  }
+
+  // Draw lattice edges between nearby projected nodes
+  ctx.lineWidth=0.35;
+  const maxDist=60*zoom;
+  for(let i=0;i<latticeNodes.length;i++){
+    for(let j=i+1;j<latticeNodes.length;j++){
+      const d=Math.hypot(latticeNodes[i].sp.x-latticeNodes[j].sp.x,
+                         latticeNodes[i].sp.y-latticeNodes[j].sp.y);
+      if(d>maxDist||d<3)continue;
+      const alpha=0.06*(1-d/maxDist)*Math.min(latticeNodes[i].sp.s,latticeNodes[j].sp.s);
+      if(alpha<0.005)continue;
+      ctx.strokeStyle=`rgba(180,200,220,${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(latticeNodes[i].sp.x,latticeNodes[i].sp.y);
+      ctx.lineTo(latticeNodes[j].sp.x,latticeNodes[j].sp.y);
+      ctx.stroke();
+    }
+  }
+
+  // Draw lattice nodes as small diamonds
+  for(const n of latticeNodes){
+    const sz=1.8*n.sp.s*zoom;
+    const alpha=n.sp.s*0.3;
+    if(alpha<0.02)continue;
+    fillGlow(n.sp.x,n.sp.y,sz*3,'180,210,240',alpha*0.15*glowAmt);
+    // Diamond
+    const rot=time*0.5+n.pairIdx*0.2;
+    const cr=Math.cos(rot),sr=Math.sin(rot);
+    ctx.fillStyle=`rgba(200,220,240,${alpha*0.5})`;
+    ctx.beginPath();
+    ctx.moveTo(n.sp.x+sz*cr,n.sp.y+sz*sr);
+    ctx.lineTo(n.sp.x-sz*sr,n.sp.y+sz*cr);
+    ctx.lineTo(n.sp.x-sz*cr,n.sp.y-sz*sr);
+    ctx.lineTo(n.sp.x+sz*sr,n.sp.y-sz*cr);
+    ctx.closePath();ctx.fill();
+  }
+}
+
+// ============ HORIZON SKYBOX: BABEL TOWER LATTICES ============
+// Looking outward from E8 core: Leech (24D) at mid-horizon, Craig (120D) at far horizon
+function drawHorizonSkybox(time){
+  const maxR=Math.max(W,H)*0.55;
+  const spin=time*0.005*chiralDir;
+
+  // CRAIG LATTICE — outermost horizon (120D, twin primes 11,13)
+  // Faint purple ring with 120 tick marks (vertices of 600-cell = dim of Craig)
+  const craigR=maxR*0.95;
+  ctx.beginPath();ctx.arc(cx,cy,craigR,0,Math.PI*2);
+  ctx.strokeStyle='rgba(191,127,255,0.04)';ctx.lineWidth=1;ctx.stroke();
+
+  // 120 vertex ticks around the horizon
+  for(let i=0;i<120;i++){
+    const a=(i/120)*Math.PI*2+spin*0.7;
+    const inner=craigR-4,outer=craigR+2;
+    const flicker=0.3+0.7*Math.abs(Math.sin(time*0.3+i*0.3));
+    ctx.strokeStyle=`rgba(191,127,255,${0.06*flicker})`;
+    ctx.lineWidth=0.5;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*inner,cy+Math.sin(a)*inner);
+    ctx.lineTo(cx+Math.cos(a)*outer,cy+Math.sin(a)*outer);
+    ctx.stroke();
+  }
+
+  // Craig label
+  const cla=spin+Math.PI*0.15;
+  txt('Craig A\u2081\u2084\u2082\u207D\u00B2\u207E',cx+Math.cos(cla)*craigR,cy+Math.sin(cla)*craigR-12,'rgba(191,127,255,0.15)',6);
+  txt('120D \u00b7 (11,13)',cx+Math.cos(cla)*craigR,cy+Math.sin(cla)*craigR+2,'rgba(191,127,255,0.1)',5);
+
+  // LEECH LATTICE — mid horizon (24D, 196560 kissing, twin primes 5,7)
+  const leechR=maxR*0.72;
+  ctx.beginPath();ctx.arc(cx,cy,leechR,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,229,255,0.05)';ctx.lineWidth=1.2;ctx.stroke();
+
+  // 24 prominent vertices (dim of Leech = 24, also 24-cell connection)
+  for(let i=0;i<24;i++){
+    const a=(i/24)*Math.PI*2+spin*1.2;
+    const x=cx+Math.cos(a)*leechR,y=cy+Math.sin(a)*leechR;
+    fillGlow(x,y,4,'0,229,255',0.06*glowAmt);
+    // Tiny tick
+    ctx.strokeStyle='rgba(0,229,255,0.08)';ctx.lineWidth=0.6;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*(leechR-6),cy+Math.sin(a)*(leechR-6));
+    ctx.lineTo(cx+Math.cos(a)*(leechR+6),cy+Math.sin(a)*(leechR+6));
+    ctx.stroke();
+  }
+
+  // 196560 represented as faint scattered particles between Leech and Craig rings
+  for(let i=0;i<80;i++){
+    const a=(i/80)*Math.PI*2+spin+Math.sin(i*7.3)*0.5;
+    const r=leechR+(craigR-leechR)*(0.1+0.8*((Math.sin(i*3.7+time*0.2)+1)/2));
+    const flicker=0.3+0.7*Math.abs(Math.sin(time*0.5+i*2.1));
+    fillGlow(cx+Math.cos(a)*r,cy+Math.sin(a)*r,1.5,'140,180,220',0.03*flicker*glowAmt);
+  }
+
+  // Leech label
+  const lla=spin+Math.PI*1.15;
+  txt('Leech \u039B\u2082\u2084',cx+Math.cos(lla)*leechR,cy+Math.sin(lla)*leechR-12,'rgba(0,229,255,0.18)',6.5);
+  txt('24D \u00b7 196,560 \u00b7 (5,7)',cx+Math.cos(lla)*leechR,cy+Math.sin(lla)*leechR+2,'rgba(0,229,255,0.12)',5);
+
+  // E8 horizon ring — innermost named ring
+  const e8R=maxR*0.45;
+  ctx.beginPath();ctx.arc(cx,cy,e8R,0,Math.PI*2);
+  ctx.strokeStyle='rgba(200,169,110,0.06)';ctx.lineWidth=1;ctx.stroke();
+
+  const ela=spin+Math.PI*0.65;
+  txt('E\u2088',cx+Math.cos(ela)*e8R,cy+Math.sin(ela)*e8R-8,'rgba(200,169,110,0.2)',7);
+  txt('8D \u00b7 240 \u00b7 (3,5)',cx+Math.cos(ela)*e8R,cy+Math.sin(ela)*e8R+5,'rgba(200,169,110,0.12)',5);
+
+  // Radial BABEL tower lines connecting E8 → Leech → Craig
+  ctx.setLineDash([2,8]);
+  for(let i=0;i<6;i++){
+    const a=(i/6)*Math.PI*2+spin*0.5;
+    ctx.strokeStyle='rgba(200,169,110,0.03)';ctx.lineWidth=0.5;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*e8R,cy+Math.sin(a)*e8R);
+    ctx.lineTo(cx+Math.cos(a)*craigR,cy+Math.sin(a)*craigR);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // BABEL label
+  txt('BABEL TOWER',cx,cy-maxR*0.82,'rgba(200,169,110,0.1)',5.5);
+  txt('E\u2088 \u2192 Leech \u2192 Craig \u2192 fold',cx,cy-maxR*0.82+11,'rgba(200,169,110,0.07)',4.5);
+}
+
+// ============ CONVEXITY GAP (5.3% WEDGE) ============
+function drawConvexityGap(time){
+  if(!showGap)return;
+  const maxR=Math.min(W,H)*0.42*zoom;
+  const gs=time*0.02*chiralDir;
+
+  // Draw closed portion (94.7%) as faint gold arc
+  ctx.beginPath();
+  ctx.arc(cx,cy,maxR,gs+GAP_ANGLE,gs+Math.PI*2);
+  ctx.strokeStyle='rgba(200,169,110,0.06)';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+
+  // Gap wedge: dark void
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.arc(cx,cy,maxR,gs,gs+GAP_ANGLE);
+  ctx.closePath();
+  const gg=ctx.createRadialGradient(cx,cy,0,cx,cy,maxR);
+  gg.addColorStop(0,'rgba(80,15,50,0)');
+  gg.addColorStop(0.4,'rgba(80,15,50,0.06)');
+  gg.addColorStop(1,'rgba(80,15,50,0.12)');
+  ctx.fillStyle=gg;ctx.fill();
+
+  // Dashed gap edges
+  ctx.setLineDash([3,5]);
+  ctx.strokeStyle='rgba(255,50,80,0.15)';ctx.lineWidth=0.8;
+  for(const a of [gs,gs+GAP_ANGLE]){
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*maxR,cy+Math.sin(a)*maxR);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Gap label
+  const midA=gs+GAP_ANGLE/2;
+  const lx=cx+Math.cos(midA)*(maxR+16),ly=cy+Math.sin(midA)*(maxR+16);
+  txt('1\u2212S = 5.3%',lx,ly,'rgba(255,80,100,0.4)',7);
+  txt('non-convex gap',lx,ly+11,'rgba(255,80,100,0.25)',6);
+}
+
+// ============ CRYSTALLIZED E8 CORE ============
+function drawCrystalRoots(time){
+  const projected=roots.map((r,idx)=>{
+    const sp=projectToScreen(r.p4,time);
+    return{sp,type:r.type,k:r.k,idx,r};
+  });
+  projected.sort((a,b)=>b.sp.z-a.sp.z);
+
+  // Draw lattice edges first (behind roots)
+  if(showCrystal){
+    ctx.lineWidth=0.4;
+    const maxEdgeDist=80*zoom;
+    for(const pr of projected){
+      if(pr.sp.s<0.5)continue;
+      const distFromCenter=Math.hypot(pr.sp.x-cx,pr.sp.y-cy);
+      if(distFromCenter>W*0.35)continue;
+      const r=pr.r;
+      for(const ni of r.neighbors){
+        if(ni<=pr.idx)continue;
+        const nr=roots[ni];
+        const nsp=projectToScreen(nr.p4,time);
+        const nd=Math.hypot(nsp.x-cx,nsp.y-cy);
+        if(nd>W*0.35)continue;
+        const sd=Math.hypot(pr.sp.x-nsp.x,pr.sp.y-nsp.y);
+        if(sd>maxEdgeDist||sd<2)continue;
+
+        const isD8=pr.type==='D8'&&nr.type==='D8';
+        const rgb=isD8?'200,160,80':'50,170,220';
+        const alpha=0.04*(1-sd/maxEdgeDist)*pr.sp.s;
+        if(alpha<0.005)continue;
+        ctx.strokeStyle=`rgba(${rgb},${alpha})`;
+        ctx.beginPath();ctx.moveTo(pr.sp.x,pr.sp.y);ctx.lineTo(nsp.x,nsp.y);ctx.stroke();
+      }
+    }
+  }
+
+  // Draw roots as crystal points
+  for(const pr of projected){
+    if(pr.sp.z>3)continue;
+    const isD8=pr.type==='D8';
+    let rgb=isD8?'220,170,90':'60,190,240';
+    // Negative-k subtle red shift for chirality
+    if(pr.k<0) rgb=isD8?'220,150,70':'100,160,230';
+    if(Math.abs(pr.k)===3) rgb=pr.k>0?'100,220,255':'160,140,240';
+
+    const alpha=Math.max(0.15,Math.min(0.95,0.5+0.3*pr.sp.s));
+    const sz=(isD8?2.5:2.0)*pr.sp.s*zoom;
+
+    // Dim in gap
+    let gapDim=1;
+    if(showGap&&inGap(screenAngle(pr.sp.x,pr.sp.y),time)) gapDim=0.2;
+
+    // Outer glow
+    fillGlow(pr.sp.x,pr.sp.y,sz*4,rgb,alpha*0.1*glowAmt*gapDim);
+    // Core glow
+    fillGlow(pr.sp.x,pr.sp.y,sz,rgb,alpha*0.7*gapDim);
+
+    // Diamond shape (crystalline)
+    const d=sz*0.6;
+    const rot=time*0.3+pr.idx*0.1;
+    const cr=Math.cos(rot),sr=Math.sin(rot);
+    ctx.fillStyle=`rgba(255,255,255,${alpha*0.5*gapDim})`;
+    ctx.beginPath();
+    ctx.moveTo(pr.sp.x+d*cr,pr.sp.y+d*sr);
+    ctx.lineTo(pr.sp.x-d*sr,pr.sp.y+d*cr);
+    ctx.lineTo(pr.sp.x-d*cr,pr.sp.y-d*sr);
+    ctx.lineTo(pr.sp.x+d*sr,pr.sp.y-d*cr);
+    ctx.closePath();ctx.fill();
+  }
+}
+
+// ============ CLIFFORD TORUS + 12-STEP SPINOR ORBIT ============
+function drawCliffordTorus(planeA,planeB,time,color){
+  const pba=planeBasis4D[planeA],pbb=planeBasis4D[planeB];
+  const R1=0.45,R2=0.15,N1=48,N2=16;
+  const sp1=time*0.2*chiralDir,sp2=time*0.3*chiralDir;
+
+  ctx.strokeStyle=`rgba(${color},0.035)`;
+  ctx.lineWidth=0.5;
+  ctx.shadowColor=`rgba(${color},${0.02*glowAmt})`;
+  ctx.shadowBlur=glowAmt*5;
+
+  for(let i=0;i<N1;i+=3){
+    ctx.beginPath();
+    for(let j=0;j<=N2;j++){
+      const th=(i/N1)*Math.PI*2+sp1,ph=(j/N2)*Math.PI*2+sp2;
+      const ct=Math.cos(th),st=Math.sin(th),cp=Math.cos(ph),sp=Math.sin(ph);
+      const p4=[];
+      for(let c=0;c<4;c++) p4[c]=(R1+R2*cp)*(ct*pba.ui[c]+st*pba.uj[c])+R2*sp*pbb.ui[c];
+      const pt=projectToScreen(p4,time);
+      j===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y);
+    }
+    ctx.stroke();
+  }
+  for(let j=0;j<N2;j+=2){
+    ctx.beginPath();
+    for(let i=0;i<=N1;i++){
+      const th=(i/N1)*Math.PI*2+sp1,ph=(j/N2)*Math.PI*2+sp2;
+      const ct=Math.cos(th),st=Math.sin(th),cp=Math.cos(ph),sp=Math.sin(ph);
+      const p4=[];
+      for(let c=0;c<4;c++) p4[c]=(R1+R2*cp)*(ct*pba.ui[c]+st*pba.uj[c])+R2*sp*pbb.ui[c];
+      const pt=projectToScreen(p4,time);
+      i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y);
+    }
+    ctx.stroke();
+  }
+  ctx.shadowBlur=0;
+
+  // 12-STEP SPINOR ORBIT
+  if(showOrbit){
+    spinorTimer+=0.016*speed*0.4;
+    const activeStep=Math.floor(spinorTimer)%12;
+
+    for(let step=0;step<12;step++){
+      const th=(step/12)*Math.PI*2+sp1;
+      const ph=(step/12)*Math.PI*2+sp2;
+      const ct=Math.cos(th),st=Math.sin(th),cp=Math.cos(ph),spp=Math.sin(ph);
+      const p4=[];
+      for(let c=0;c<4;c++) p4[c]=(R1+R2*cp)*(ct*pba.ui[c]+st*pba.uj[c])+R2*spp*pbb.ui[c];
+      const pt=projectToScreen(p4,time);
+
+      const isHalf=(step===6);
+      const isActive=(step===activeStep);
+      const firstHalf=(step<6);
+      const rgb=firstHalf?'60,200,240':'255,140,60';
+      const r=isActive?6:isHalf?5:3;
+      const al=isActive?0.9:isHalf?0.7:0.35;
+
+      fillGlow(pt.x,pt.y,r*pt.s*1.5,rgb,al*0.3*glowAmt);
+      fillGlow(pt.x,pt.y,r*pt.s*0.5,'255,255,255',al*0.6);
+
+      if(isHalf){
+        txt('\u03c3\u2082\u2089',pt.x,pt.y-10*pt.s,`rgba(255,140,60,0.7)`,7);
+        txt('half-turn',pt.x,pt.y+10*pt.s,`rgba(255,140,60,0.35)`,5);
+      }
+      if(pt.s>0.5) txt(String(step),pt.x,pt.y,`rgba(255,255,255,${al*0.5})`,5);
+    }
+
+    // Connect step 0 to step 6 (half-period line)
+    const p0=[],p6=[];
+    for(let c=0;c<4;c++){
+      const th0=sp1,th6=(6/12)*Math.PI*2+sp1;
+      const ph0=sp2,ph6=(6/12)*Math.PI*2+sp2;
+      p0[c]=(R1+R2*Math.cos(ph0))*(Math.cos(th0)*pba.ui[c]+Math.sin(th0)*pba.uj[c])+R2*Math.sin(ph0)*pbb.ui[c];
+      p6[c]=(R1+R2*Math.cos(ph6))*(Math.cos(th6)*pba.ui[c]+Math.sin(th6)*pba.uj[c])+R2*Math.sin(ph6)*pbb.ui[c];
+    }
+    const sp0=projectToScreen(p0,time),sp6=projectToScreen(p6,time);
+    ctx.setLineDash([3,4]);
+    ctx.strokeStyle='rgba(255,140,60,0.15)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(sp0.x,sp0.y);ctx.lineTo(sp6.x,sp6.y);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+// ============ DRAW SHELL RINGS ============
+function drawShellRings(time){
+  const shells=[
+    {k:-3,pop:24,type:'S+'},{k:-2,pop:56,type:'D8'},{k:-1,pop:40,type:'S+'},
+    {k:+1,pop:40,type:'S+'},{k:+2,pop:56,type:'D8'},{k:+3,pop:24,type:'S+'}
+  ];
+  for(const sh of shells){
+    const isD8=sh.type==='D8';
+    const rgb=isD8?'220,170,90':'60,190,240';
+    const r=Math.sqrt(1+sh.k*DELTA)*zoom*Math.min(W,H)*0.28;
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(${rgb},0.12)`;ctx.lineWidth=1;
+    ctx.setLineDash([2,6]);ctx.stroke();ctx.setLineDash([]);
+    const la=-Math.PI/2+sh.k*0.2+time*0.05;
+    txt(`k=${sh.k>0?'+':''}${sh.k} (${sh.pop})`,cx+Math.cos(la)*(r+12),cy+Math.sin(la)*(r+12),`rgba(${rgb},0.4)`,7);
+  }
+}
+
+// ====================================================================
+//  MODE 0: CASCADE — beams cascade inward → cancel → crystallize
+// ====================================================================
+function drawCascade(){
+  // 0. Horizon skybox: Leech + Craig lattice horizons (outermost layer)
+  drawHorizonSkybox(t);
+
+  // 1. Convexity gap underlay
+  drawConvexityGap(t);
+
+  // 2. Clifford torus + spinor orbit (behind)
+  if(showTorus){
+    const used=new Set();
+    for(const[a,b] of ORTH_PAIRS){
+      if(!used.has(a)&&!used.has(b)){
+        drawCliffordTorus(a,b,t,'0,229,255');
+        used.add(a);used.add(b);break;
+      }
+    }
+  }
+
+  // 3. Interference zones (before planes)
+  drawInterference(t);
+
+  // 4. 28 moiré planes (depth-sorted)
+  if(showPlanes){
+    const pd=[];
+    for(let i=0;i<28;i++) pd.push(drawMoirePlane(i,t));
+    pd.sort((a,b)=>b.avgZ-a.avgZ);
+    for(const d of pd) d.draw();
+  }
+
+  // 5. Beam cascade (inward-streaming particles)
+  if(showBeams){
+    updateBeams(0.016);
+    drawBeamCascade(t);
+  }
+
+  // 6. Golden ratio / plastic ratio convexity spirals
+  drawGoldenLines(t);
+
+  // 7. Plane intersection lattice (geometric 3D form at center)
+  drawPlaneIntersectionLattice(t);
+
+  // 8. Crystallized E8 core
+  if(showRoots) drawCrystalRoots(t);
+
+  // 9. 24-cell void at the core (self-dual closure)
+  draw24Cell(t);
+
+  // 10. Text
+  txt('DIALECTICAL MOIR\u00c9 ENGINE',cx,46,'rgba(200,169,110,0.6)',12);
+  txt('28 planes \u2192 168 cancel \u2192 210 reinforce \u2192 24-cell void \u2192 240 E8 roots crystallize',cx,63,'rgba(200,169,110,0.28)',7);
+  txt(`S = \u03b4\u00b7\u03c6\u00b3 = ${S_CONVEX.toFixed(3)}  |  24-cell = self-dual closure  |  \u03c6 spiral: golden  |  \u03c1 spiral: plastic  |  5.3% gap`,cx,H-22,'rgba(200,169,110,0.22)',6.5);
+}
+
+// ====================================================================
+//  MODE 1: SHELLS
+// ====================================================================
+function drawShells(){
+  drawShellRings(t);
+  // Draw roots
+  const projected=roots.map(r=>({sp:projectToScreen(r.p4,t),type:r.type,k:r.k}));
+  projected.sort((a,b)=>b.sp.z-a.sp.z);
+  for(const{sp,type,k}of projected){
+    if(sp.z>3)continue;
+    const isD8=type==='D8';
+    const rgb=isD8?'220,170,90':'60,190,240';
+    const alpha=Math.max(0.15,Math.min(0.9,0.5+0.3*sp.s));
+    const r=(isD8?2.2:1.8)*sp.s*zoom;
+    fillGlow(sp.x,sp.y,r*3,rgb,alpha*0.1*glowAmt);
+    fillGlow(sp.x,sp.y,r,rgb,alpha*0.7);
+    ctx.fillStyle=`rgba(255,255,255,${alpha*0.5})`;
+    ctx.beginPath();ctx.arc(sp.x,sp.y,r*0.3,0,Math.PI*2);ctx.fill();
+  }
+  const shells=[{k:-3,p:24,f:3,t:'S+'},{k:-2,p:56,f:7,t:'D8'},{k:-1,p:40,f:5,t:'S+'},{k:1,p:40,f:5,t:'S+'},{k:2,p:56,f:7,t:'D8'},{k:3,p:24,f:3,t:'S+'}];
+  const ty=H*0.12;
+  for(let i=0;i<6;i++){
+    const sh=shells[i],isD8=sh.t==='D8',rgb=isD8?'220,170,90':'60,190,240';
+    const x=cx+(i-2.5)*80;
+    fillGlow(x,ty,15,rgb,0.15*glowAmt);
+    txt(`k=${sh.k>0?'+':''}${sh.k}`,x,ty-12,`rgba(${rgb},0.7)`,8);
+    txt(`${sh.p}`,x,ty+2,'rgba(255,255,255,0.8)',12);
+    txt(`f=${sh.f}  ${sh.t}`,x,ty+16,`rgba(${rgb},0.45)`,6);
+  }
+  txt('Born Rule: P(k) = f(k)/h = f(k)/30',cx,ty+40,'rgba(200,169,110,0.4)',8);
+  txt('Palindromic: pop(k) = pop(\u2212k)  |  Factor sum: 3+7+5+5+7+3 = 30 = h',cx,H-38,'rgba(200,169,110,0.3)',7);
+  txt('I_shell = 2.51 bits  |  I_position = 5.40 bits  |  I_total = 7.91 = log\u2082(240)',cx,H-22,'rgba(191,127,255,0.35)',7);
+}
+
+// ====================================================================
+//  MODE 2: SIGMA CHAIN
+// ====================================================================
+function drawSigmaChain(){
+  ctx.globalAlpha=0.25;
+  const projected=roots.map(r=>({sp:projectToScreen(r.p4,t),type:r.type}));
+  projected.sort((a,b)=>b.sp.z-a.sp.z);
+  for(const{sp,type}of projected){
+    if(sp.z>3)continue;
+    const rgb=type==='D8'?'220,170,90':'60,190,240';
+    fillGlow(sp.x,sp.y,1.5*sp.s*zoom,rgb,0.4);
+  }
+  ctx.globalAlpha=1;
+
+  const SIGMA=[
+    {v:28,l:'C(8,2)',d:'rotation planes',c:'200,169,110'},
+    {v:56,l:'\u03c3(28)',d:'D8 shell pop',c:'60,190,240'},
+    {v:120,l:'\u03c3(56)',d:'5! = |2I|',c:'191,127,255'},
+    {v:360,l:'\u03c3(120)',d:'360\u00b0 = circle',c:'255,107,53'},
+    {v:1170,l:'\u03c3(360)',d:'2\u00b73\u00b2\u00b75\u00b713',c:'255,51,85'},
+    {v:3276,l:'\u03c3(1170)',d:'2\u00b2\u00b73\u00b2\u00b77\u00b713',c:'68,255,136'}
+  ];
+  const n=SIGMA.length;
+  const circR=Math.min(W,H)*0.28; // circle radius
+  const rotOff=t*0.08; // slow rotation
+  const active=Math.floor((t*0.5)%(n+2));
+
+  // Draw the circular chain
+  for(let i=0;i<n;i++){
+    const angle=(i/n)*Math.PI*2-Math.PI/2+rotOff; // start at top, rotate
+    const nx=cx+Math.cos(angle)*circR,ny=cy+Math.sin(angle)*circR;
+    const sc=SIGMA[i],rgb=sc.c;
+    const on=i<=active,pulse=i===Math.min(active,n-1)?1+0.2*Math.sin(t*4):1;
+    const al=on?0.9:0.2;
+
+    // Arc arrow to next node
+    const nextAngle=((i+1)/n)*Math.PI*2-Math.PI/2+rotOff;
+    const midAngle=(angle+nextAngle)/2+(i===n-1?Math.PI:0);
+    const nx2=cx+Math.cos(nextAngle)*circR,ny2=cy+Math.sin(nextAngle)*circR;
+
+    // Curved connecting line (arc through midpoint slightly inward)
+    const arcR=circR*0.88;
+    const mx=cx+Math.cos(midAngle)*arcR,my=cy+Math.sin(midAngle)*arcR;
+    ctx.strokeStyle=`rgba(${rgb},${al*0.35})`;ctx.lineWidth=1.5;
+    ctx.shadowColor=`rgba(${rgb},${al*0.15})`;ctx.shadowBlur=glowAmt*4;
+    ctx.beginPath();ctx.moveTo(nx,ny);ctx.quadraticCurveTo(mx,my,nx2,ny2);ctx.stroke();ctx.shadowBlur=0;
+
+    // Arrowhead at midpoint
+    const arrowA=Math.atan2(ny2-my,nx2-mx);
+    const aLen=6;
+    ctx.fillStyle=`rgba(${rgb},${al*0.4})`;
+    ctx.beginPath();
+    ctx.moveTo(mx+Math.cos(arrowA)*aLen,my+Math.sin(arrowA)*aLen);
+    ctx.lineTo(mx+Math.cos(arrowA+2.5)*aLen*0.6,my+Math.sin(arrowA+2.5)*aLen*0.6);
+    ctx.lineTo(mx+Math.cos(arrowA-2.5)*aLen*0.6,my+Math.sin(arrowA-2.5)*aLen*0.6);
+    ctx.fill();
+
+    // sigma label on arc
+    txt('\u03c3',mx,my-10,`rgba(${rgb},${al*0.45})`,7);
+
+    // Node glow + text
+    fillGlow(nx,ny,30*pulse,rgb,al*0.12*glowAmt);
+    txt(String(sc.v),nx,ny,`rgba(255,255,255,${al})`,14);
+    // Label outside the circle
+    const labelR=circR+28;
+    const lx=cx+Math.cos(angle)*labelR,ly=cy+Math.sin(angle)*labelR;
+    txt(sc.l,lx,ly-8,`rgba(${rgb},${al*0.6})`,7);
+    txt(sc.d,lx,ly+6,`rgba(${rgb},${al*0.35})`,5.5);
+  }
+
+  // Center: "\u03c3(120)=360\u00b0" identity — the circle IS the resonance
+  fillGlow(cx,cy,circR*0.3,'200,169,110',0.03*glowAmt);
+  txt('\u03c3-Cycle',cx,cy-14,'rgba(200,169,110,0.5)',11);
+  txt('\u03c3(120) = 360\u00b0',cx,cy+4,'rgba(191,127,255,0.4)',8);
+  txt('the circle IS the resonance',cx,cy+18,'rgba(191,127,255,0.22)',6);
+
+  txt('The \u03c3-Chain from 28',cx,50,'rgba(200,169,110,0.7)',13);
+  txt('Divisor sum cycles through every E8 constant',cx,68,'rgba(200,169,110,0.3)',8);
+
+  // Framework primes ring inside the cycle
+  const py=cy+circR*0.45;
+  [[2,'200,169,110'],[3,'60,190,240'],[5,'191,127,255'],[7,'255,107,53'],[13,'255,51,85']].forEach(([p,c],i)=>{
+    const pa=(i/5)*Math.PI*2-Math.PI/2+rotOff*1.5;
+    const pr2=circR*0.42;
+    const px2=cx+Math.cos(pa)*pr2,py2=cy+Math.sin(pa)*pr2;
+    fillGlow(px2,py2,8,c,0.25);txt(String(p),px2,py2,'rgba(255,255,255,0.6)',9);
+  });
+  txt('Primes {2,3,5,7,13}',cx,H-22,'rgba(200,169,110,0.25)',7);
+}
+
+// ====================================================================
+//  MODE 3: CHIRAL
+// ====================================================================
+function drawChiral(){
+  if(showPlanes){
+    const pd=[];
+    for(let i=0;i<28;i++) pd.push(drawMoirePlane(i,t));
+    pd.sort((a,b)=>b.avgZ-a.avgZ);
+    ctx.globalAlpha=0.3;for(const d of pd) d.draw();ctx.globalAlpha=1;
+  }
+
+  const projected=roots.map(r=>({sp:projectToScreen(r.p4,t),type:r.type,k:r.k}));
+  projected.sort((a,b)=>b.sp.z-a.sp.z);
+  for(const{sp,type,k}of projected){
+    if(sp.z>3)continue;
+    const isPos=k>0;
+    const rgb=isPos?'60,190,240':'255,80,100';
+    const alpha=Math.max(0.2,Math.min(0.9,0.5+0.3*sp.s));
+    const r=2.0*sp.s*zoom;
+    fillGlow(sp.x,sp.y,r*3,rgb,alpha*0.1*glowAmt);
+    fillGlow(sp.x,sp.y,r,rgb,alpha*0.7);
+  }
+
+  ctx.setLineDash([4,8]);ctx.strokeStyle='rgba(200,169,110,0.12)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx,40);ctx.lineTo(cx,H-40);ctx.stroke();ctx.setLineDash([]);
+  txt('GALOIS MIRROR: \u221a5 \u2192 \u2212\u221a5',cx+5,80,'rgba(200,169,110,0.25)',7,'left');
+
+  txt(chiralDir>0?'k > 0  MATTER':'k > 0  ANTIMATTER',cx-W*0.22,cy-30,'rgba(60,190,240,0.5)',9);
+  txt(chiralDir>0?'k < 0  ANTIMATTER':'k < 0  MATTER',cx+W*0.22,cy-30,'rgba(255,80,100,0.5)',9);
+  txt(chiralDir>0?'\u21ba CW':'\u21bb CCW',cx-W*0.22,cy-15,'rgba(60,190,240,0.3)',8);
+  txt(chiralDir>0?'\u21bb CCW':'\u21ba CW',cx+W*0.22,cy-15,'rgba(255,80,100,0.3)',8);
+
+  txt('Chiral Rotation: k \u21a6 \u2212k = Galois \u03c3: \u221a5 \u2192 \u2212\u221a5',cx,50,'rgba(200,169,110,0.65)',12);
+  txt('Time reversal T = Galois conjugation  |  Palindrome pop(k)=pop(\u2212k) = CPT invariance',cx,68,'rgba(200,169,110,0.3)',7);
+  txt('(24, 56, 40 | 40, 56, 24)  |  S+ pairs like Kramers degeneracy  |  antimatter = rotation reversal',cx,H-22,'rgba(200,169,110,0.25)',7);
+}
+
+// ====================================================================
+//  MAIN LOOP
+// ====================================================================
+function frame(){
+  t+=0.016;
+  ctx.clearRect(0,0,W,H);
+  const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*0.7);
+  bg.addColorStop(0,'rgba(4,4,12,1)');bg.addColorStop(1,'rgba(2,2,5,1)');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  switch(mode){
+    case 0:drawCascade();break;
+    case 1:drawShells();break;
+    case 2:drawSigmaChain();break;
+    case 3:drawChiral();break;
+  }
+
+  document.getElementById('hud-mode').textContent=['CASCADE \u00b7 MOIR\u00c9','SHELL PROJECTION','\u03c3-CHAIN','CHIRAL REVERSAL'][mode];
+  document.getElementById('hud-sub').textContent=[
+    '28 planes \u2192 cascade \u2192 cancel/reinforce \u2192 crystallize 240 roots',
+    '6 shells \u00b7 Born rule P(k)=f(k)/30',
+    '\u03c3(28)\u219256\u2192120\u2192360\u21921170\u21923276',
+    'Galois \u03c3: \u221a5\u2192\u2212\u221a5 \u00b7 k\u21a6\u2212k'
+  ][mode];
+  requestAnimationFrame(frame);
+}
+
+// ====================================================================
+//  UI
+// ====================================================================
+function buildUI(){
+  document.getElementById('mode-bar').innerHTML=MODES.map((l,i)=>`<button class="mode-btn ${i===mode?'active':''}" onclick="setMode(${i})">${l}</button>`).join('');
+
+  const panels=`
+    <div class="acc open"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Controls</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="ctrl-row"><span class="ctrl-lbl">SPEED</span><input type="range" min="0" max="200" value="${speed*100}" oninput="speed=this.value/100;autoRot=speed*0.12;this.nextElementSibling.textContent=speed.toFixed(1)"><span class="ctrl-val">${speed.toFixed(1)}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">GLOW</span><input type="range" min="0" max="100" value="${glowAmt*100}" oninput="glowAmt=this.value/100;this.nextElementSibling.textContent=glowAmt.toFixed(1)"><span class="ctrl-val">${glowAmt.toFixed(1)}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">PLANE &alpha;</span><input type="range" min="1" max="12" value="${planeAlpha*100}" oninput="planeAlpha=this.value/100;this.nextElementSibling.textContent=planeAlpha.toFixed(2)"><span class="ctrl-val">${planeAlpha.toFixed(2)}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">PLANE R</span><input type="range" min="30" max="300" value="${planeScale*100}" oninput="planeScale=this.value/100;this.nextElementSibling.textContent=planeScale.toFixed(1)"><span class="ctrl-val">${planeScale.toFixed(1)}</span></div>
+      <div class="toggle-row">
+        <button class="tog-btn ${showRoots?'active':''}" onclick="showRoots=!showRoots;this.classList.toggle('active')">240 ROOTS</button>
+        <button class="tog-btn ${showPlanes?'active':''}" onclick="showPlanes=!showPlanes;this.classList.toggle('active')">28 PLANES</button>
+        <button class="tog-btn ${showTorus?'active':''}" onclick="showTorus=!showTorus;this.classList.toggle('active')">TORUS</button>
+        <button class="tog-btn ${showBeams?'active':''}" onclick="showBeams=!showBeams;this.classList.toggle('active')">BEAMS</button>
+        <button class="tog-btn ${showCrystal?'active':''}" onclick="showCrystal=!showCrystal;this.classList.toggle('active')">LATTICE</button>
+        <button class="tog-btn ${showGap?'active':''}" onclick="showGap=!showGap;this.classList.toggle('active')">5.3% GAP</button>
+        <button class="tog-btn ${showOrbit?'active':''}" onclick="showOrbit=!showOrbit;this.classList.toggle('active')">12-STEP</button>
+        <button class="tog-btn ${show24Cell?'active':''}" onclick="show24Cell=!show24Cell;this.classList.toggle('active')">24-CELL</button>
+        <button class="tog-btn ${showGoldenLines?'active':''}" onclick="showGoldenLines=!showGoldenLines;this.classList.toggle('active')">&phi; SPIRAL</button>
+        <button class="tog-btn" onclick="chiralDir*=-1;this.classList.toggle('active')">FLIP CHIRAL</button>
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Cascade Physics</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="math-box">
+        28 planes emit beams inward<br>
+        168 non-orth pairs: CANCEL<br>
+        210 orth pairs: REINFORCE<br><br>
+        Survivors crystallize into<br>
+        24-cell void (self-dual closure)<br>
+        = binary tetrahedral group 2T<br>
+        24 verts &times; 96 edges &times; 96 faces<br><br>
+        &phi; golden spiral: &delta;&middot;&phi;&sup3; = S = 0.947<br>
+        &rho; plastic spiral: x&sup3;=x+1<br>
+        S(1&minus;S) = 1/20 = &delta;&sup2;<br><br>
+        24-cell inscribes 25&times; in 600-cell<br>
+        The void is where E8 lattice sits.
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Spinor Half-Turn</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="math-box">
+        12-step Clifford torus orbit:<br>
+        (2&#8310; mod 5, 3&#8310; mod 7) =<br>
+        (64 mod 5, 729 mod 7) =<br>
+        (4, 1) = (&minus;1 mod 5, +1 mod 7)<br><br>
+        Step 6 = &sigma;&#8322;&#8329; = cross-parity<br>
+        involution that exchanges<br>
+        +k and &minus;k shells.<br><br>
+        The E8 analogue of fermion<br>
+        sign change under 2&pi; rotation.
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>E8 Root System</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">ROOTS</div><div class="metric-value">240</div></div>
+        <div class="metric"><div class="metric-label">D8 INT</div><div class="metric-value" style="color:#dca85a">112</div></div>
+        <div class="metric"><div class="metric-label">S+ SPIN</div><div class="metric-value" style="color:#3cbef0">128</div></div>
+        <div class="metric"><div class="metric-label">S+/D8</div><div class="metric-value">8/7</div></div>
+        <div class="metric"><div class="metric-label">SHELLS</div><div class="metric-value">6</div></div>
+        <div class="metric"><div class="metric-label">h</div><div class="metric-value">30</div></div>
+      </div>
+      <div class="math-box" style="margin-top:6px">
+        B_CP: R&sup8; &rarr; R&sup4; cross-parity<br>
+        Eigenplanes m=1,11 of w&tau;<br>
+        Q(&radic;5) number field<br>
+        &delta; = &radic;5/10 = 0.2236 = Planck scale<br>
+        D8 at k=&plusmn;2 | S+ at k=&plusmn;1,&plusmn;3
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>&sigma;-Chain</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="math-box">
+        &sigma;(28) = 56 = D8 shell pop<br>
+        &sigma;(56) = 120 = 5! = |2I|<br>
+        &sigma;(120) = 360 = |A&#8326;| = 6!/2<br>
+        &sigma;(360) = 1170 = 2&times;3&sup2;&times;5&times;13<br>
+        &sigma;(1170) = 3276 = 2&sup2;&times;3&sup2;&times;7&times;13<br><br>
+        137 + 1/28 &asymp; 1/&alpha; = 137.036
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Three Dogmas</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="math-box">
+        I. CONVEXITY<br>
+        &nbsp; Palindromic pop(k)=pop(&minus;k)<br>
+        &nbsp; S = &delta;&phi;&sup3; = 0.947<br><br>
+        II. RELATIONALITY<br>
+        &nbsp; M&#8322;/M&#8320; = dim(sublattice)<br>
+        &nbsp; M&#8324;/M&#8320; = dim(parent)<br><br>
+        III. ORTHOGONALITY<br>
+        &nbsp; Perfect type separation<br>
+        &nbsp; Galois involutions<br>
+        &nbsp; Clifford torus half-period<br><br>
+        All three converge at (3,5).<br>
+        One degree of freedom.
+      </div>
+    </div></div></div>
+  `;
+
+  document.getElementById('mob-panels').innerHTML=panels;
+  document.getElementById('desktop-sb').innerHTML=`<div style="margin-bottom:12px"><div class="mode-scroll">${MODES.map((l,i)=>`<button class="mode-btn ${i===mode?'active':''}" onclick="setMode(${i})">${l}</button>`).join('')}</div></div>${panels}`;
+}
+
+function setMode(m){mode=m;buildUI();}
+buildUI();frame();
+</script>
+</body>
+</html>

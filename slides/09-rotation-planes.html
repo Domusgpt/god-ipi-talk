@@ -1,0 +1,38 @@
+<!--
+  SLIDE 9 — ROTATION PLANES VISUALIZER
+  ═════════════════════════════════════
+  Duration: ~2 minutes
+  Purpose:  Live demo of rotation plane geometry.
+
+  THE MATH:
+  In 8D, rotation happens IN A PLANE (not around an axis like in 3D).
+  There are C(8,2) = 28 such planes — one for each pair of coordinate axes.
+
+  These 28 planes form C(28,2) = 378 pairs. Each pair is either:
+    - ORTHOGONAL (disjoint axes): 210 pairs = 2 × 3 × 5 × 7
+    - NON-ORTHOGONAL (shared axis): 168 pairs = 2³ × 3 × 7
+
+  168 = |PSL(2,7)| — the order of the projective special linear group
+  over the field with 7 elements. This group is the symmetry group
+  of the Klein quartic (next slide).
+
+  The ratio 168:210 = 4:5 = (q₀-1):q₀ where q₀ = 5 is the outer
+  twin prime in the pair (5,7).
+
+  In music, 4:5 is a major third — one of the most consonant intervals.
+-->
+<section class="slide"
+  data-notes="~2 min. DEMO. 'Here you can see the 28 rotation planes in 8 dimensions. They form 378 pairs — 168 non-orthogonal and 210 orthogonal. That number 168 is the order of PSL(2,7), the symmetry group of the Klein quartic. And the ratio 168:210 = 4:5 — which in music is a major third.' Interact with the visualizer briefly.">
+
+  <div class="iframe-wrap">
+    <iframe data-src="visualizers/rotation-planes.html" loading="lazy"></iframe>
+    <div class="iframe-overlay">
+      <div class="io-title">LIVE &nbsp;·&nbsp; 28 Rotation Planes in 8D</div>
+      <p>378 pairs →
+        <span style="color:var(--cyan)">168 non-orthogonal</span> = |PSL(2,7)| &nbsp;·&nbsp;
+        <span style="color:var(--gold)">210 orthogonal</span> &nbsp;·&nbsp;
+        Ratio: <strong>4 : 5</strong>
+      </p>
+    </div>
+  </div>
+</section>

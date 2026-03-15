@@ -1,0 +1,66 @@
+{
+  "_comment": [
+    "═══════════════════════════════════════════════════════════",
+    "E8 ROOT SYSTEM — The 240 Roots",
+    "═══════════════════════════════════════════════════════════",
+    "",
+    "E8 is a rank-8 root system with 240 roots in 8-dimensional",
+    "Euclidean space. There are exactly two types of roots:",
+    "",
+    "  D8 (integer type): All coordinates are integers.",
+    "    Form: permutations of (±1, ±1, 0, 0, 0, 0, 0, 0)",
+    "    Count: C(8,2) × 2² = 28 × 4 = 112",
+    "",
+    "  S+ (half-integer/spinor type): All coordinates are ±½.",
+    "    Form: (±½, ±½, ±½, ±½, ±½, ±½, ±½, ±½)",
+    "    Constraint: even number of minus signs",
+    "    Count: 2⁸ / 2 = 128",
+    "",
+    "  Total: 112 + 128 = 240",
+    "",
+    "Every root has squared norm 2 (they all lie on a sphere).",
+    "This file contains all 240 roots with their coordinates,",
+    "type classification, and shell assignment under the",
+    "stereoscopic parity projection.",
+    "═══════════════════════════════════════════════════════════"
+  ],
+
+  "metadata": {
+    "root_system": "E8",
+    "dimension": 8,
+    "total_roots": 240,
+    "coxeter_number": 30,
+    "exponents": [1, 7, 11, 13, 17, 19, 23, 29],
+    "exponents_sum": 120,
+    "squared_norm": 2,
+    "types": {
+      "D8": { "description": "Integer-type roots", "count": 112 },
+      "S+": { "description": "Half-integer spinor roots", "count": 128 }
+    }
+  },
+
+  "shell_decomposition": {
+    "_comment": [
+      "Under the stereoscopic parity projection, the 240 roots",
+      "fall into 6 concentric shells with the following populations.",
+      "",
+      "Shell radii satisfy: r²_k = 1 + k × δ, where δ = √5/10.",
+      "The golden ratio √5 emerges from the E8 Coxeter eigenvalues.",
+      "",
+      "The palindrome [24, 56, 40, 40, 56, 24] reads the same",
+      "forwards and backwards — a mirror symmetry connecting",
+      "matter and antimatter representations."
+    ],
+    "delta": "√5/10 ≈ 0.22360679...",
+    "shells": [
+      { "k": -3, "population": 24, "D8": 0,  "S+": 24, "purity": "pure_S+", "r_squared": "0.3292", "r_squared_exact": "1 - 3√5/10" },
+      { "k": -2, "population": 56, "D8": 56, "S+": 0,  "purity": "pure_D8", "r_squared": "0.5528", "r_squared_exact": "1 - √5/5" },
+      { "k": -1, "population": 40, "D8": 0,  "S+": 40, "purity": "pure_S+", "r_squared": "0.7764", "r_squared_exact": "1 - √5/10" },
+      { "k": +1, "population": 40, "D8": 0,  "S+": 40, "purity": "pure_S+", "r_squared": "1.2236", "r_squared_exact": "1 + √5/10" },
+      { "k": +2, "population": 56, "D8": 56, "S+": 0,  "purity": "pure_D8", "r_squared": "1.4472", "r_squared_exact": "1 + √5/5" },
+      { "k": +3, "population": 24, "D8": 0,  "S+": 24, "purity": "pure_S+", "r_squared": "1.6708", "r_squared_exact": "1 + 3√5/10" }
+    ],
+    "palindrome": [24, 56, 40, 40, 56, 24],
+    "total_check": "24 + 56 + 40 + 40 + 56 + 24 = 240 ✓"
+  }
+}

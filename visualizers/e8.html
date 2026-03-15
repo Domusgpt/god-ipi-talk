@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>E8 Root System — Level 0 · G.O.D. Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;1,200&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#ff6b35;--gold:#c8a96e;--gold-dim:#5a4a30;--cyan:#00e5ff;--deep:#030306;--panel:rgba(5,5,12,0.96);--border:rgba(255,107,53,0.2);--text:#e8f0f4;--text-dim:#8899a8;--mono:'Space Mono',monospace;--serif:'Crimson Pro',serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--text);font-family:var(--serif);touch-action:none}
+canvas#cv{position:fixed;top:0;left:0;width:100%;height:100%;display:block;cursor:grab;z-index:0}
+canvas#cv:active{cursor:grabbing}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;gap:0.5rem;padding:0 1rem;height:40px;background:rgba(3,3,6,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,107,53,0.1)}
+.topbar a{color:var(--text-dim);text-decoration:none;font:600 0.6rem var(--mono);letter-spacing:0.1em}
+.topbar a:hover{color:var(--orange)}
+.topbar-title{font:400 0.55rem var(--mono);color:var(--orange);letter-spacing:0.15em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-spacer{flex:1}
+.topbar-info{font:400 0.45rem var(--mono);color:var(--text-dim)}
+.hud{position:fixed;z-index:100;pointer-events:none}
+.hud-tl{top:50px;left:12px}
+.hud-bl{bottom:70px;left:12px}
+.hud-item{font:400 0.55rem var(--mono);color:var(--gold);opacity:0.7;text-shadow:0 0 8px rgba(200,169,110,0.3);margin-bottom:2px}
+.hud-dim{color:var(--text-dim);opacity:0.5}
+.drawer-handle{position:fixed;bottom:0;left:0;right:0;z-index:300;display:flex;flex-direction:column;align-items:center}
+.drawer-tab{display:flex;align-items:center;gap:0.5rem;width:100%;padding:8px 16px;background:var(--panel);border-top:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.grip{width:36px;height:4px;border-radius:2px;background:rgba(200,169,110,0.3)}
+.mode-scroll{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mode-scroll::-webkit-scrollbar{display:none}
+.mode-btn{font:400 0.5rem var(--mono);letter-spacing:0.06em;padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0}
+.mode-btn.active{background:rgba(200,169,110,0.18);border-color:var(--gold);color:var(--gold);box-shadow:0 0 10px rgba(200,169,110,0.15)}
+.drawer-body{width:100%;max-height:0;overflow:hidden;overflow-y:auto;background:var(--panel);transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);-webkit-overflow-scrolling:touch}
+.drawer-body.open{max-height:60vh}
+.drawer-body::-webkit-scrollbar{width:3px}
+.drawer-body::-webkit-scrollbar-thumb{background:rgba(200,169,110,0.2)}
+.drawer-inner{padding:12px 16px 24px}
+.acc{border-bottom:1px solid rgba(200,169,110,0.08)}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:10px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.acc-head h3{font:400 0.55rem var(--mono);letter-spacing:0.2em;color:var(--gold);text-transform:uppercase}
+.acc-arrow{font-size:0.6rem;color:var(--text-dim);transition:transform 0.2s}
+.acc.open .acc-arrow{transform:rotate(180deg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+.acc.open .acc-body{max-height:600px}
+.acc-content{padding:0 0 12px}
+.math-box{font:400 0.6rem var(--mono);color:var(--gold);line-height:1.8;padding:8px 10px;background:rgba(200,169,110,0.06);border:1px solid rgba(200,169,110,0.15);border-radius:3px;margin-bottom:8px}
+.shell-row{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:3px;margin-bottom:2px}
+.shell-d8{background:rgba(200,169,110,0.08);border-left:3px solid var(--gold)}
+.shell-sp{background:rgba(255,107,53,0.06);border-left:3px solid var(--orange)}
+.shell-k{font:600 0.5rem var(--mono);color:var(--text-dim);width:32px}
+.shell-bar{height:6px;border-radius:3px;flex:1}
+.shell-d8 .shell-bar{background:var(--gold)} .shell-sp .shell-bar{background:var(--orange)}
+.shell-pop{font:400 0.5rem var(--mono);color:var(--text-dim);width:26px;text-align:right}
+.shell-type{font:600 0.42rem var(--mono);width:20px;text-align:right}
+.shell-d8 .shell-type{color:var(--gold)} .shell-sp .shell-type{color:var(--orange)}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.metric{padding:6px 8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:3px}
+.metric-label{font:400 0.42rem var(--mono);letter-spacing:0.1em;color:var(--text-dim);margin-bottom:2px}
+.metric-value{font:300 0.85rem var(--serif);color:var(--text)}
+.ctrl-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ctrl-lbl{font:400 0.5rem var(--mono);color:var(--text-dim);min-width:60px}
+input[type=range]{flex:1;accent-color:var(--orange);height:20px}
+.ctrl-val{font:400 0.5rem var(--mono);color:var(--gold);min-width:28px;text-align:right}
+.legend-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-txt{font:300 0.65rem var(--serif);color:var(--text-dim)}
+.toggle-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.tog-btn{font:400 0.48rem var(--mono);padding:4px 8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;transition:all 0.15s}
+.tog-btn.active{background:rgba(200,169,110,0.15);border-color:var(--gold);color:var(--gold)}
+@media(min-width:1025px){
+  .drawer-handle{display:none}
+  .desktop-sb{display:block!important;position:fixed;top:40px;right:0;bottom:0;width:320px;z-index:150;overflow-y:auto;background:var(--panel);border-left:1px solid var(--border);padding:12px 16px}
+  .desktop-sb.collapsed{transform:translateX(100%)}
+  .desktop-sb::-webkit-scrollbar{width:3px}
+  .desk-toggle{display:flex!important}
+}
+@media(max-width:1024px){.desktop-sb{display:none!important}.desk-toggle{display:none!important}}
+.desk-toggle{position:fixed;top:48px;right:8px;z-index:200;font:400 0.5rem var(--mono);padding:4px 8px;border:1px solid var(--border);background:rgba(3,3,6,0.8);color:var(--text-dim);border-radius:3px;cursor:pointer;display:none}
+.desk-toggle:hover{color:var(--gold);border-color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="../index.html">← G.O.D.</a>
+  <span class="topbar-title">E8 ROOT SYSTEM · LEVEL 0</span>
+  <span class="topbar-spacer"></span>
+  <span class="topbar-info">(3,5) · 240 roots</span>
+</div>
+<canvas id="cv"></canvas>
+<div class="hud hud-tl">
+  <div class="hud-item">E8: 240 = 8h · 6 shells</div>
+  <div class="hud-item hud-dim">[24, 56, 40, 40, 56, 24]</div>
+</div>
+<div class="hud hud-bl"><div class="hud-item" id="hud-info">Cross-parity Coxeter projection</div></div>
+<button class="desk-toggle" id="dt">PANEL ▸</button>
+<div class="desktop-sb collapsed" id="dsb"></div>
+<div class="drawer-handle">
+  <div class="drawer-tab" id="dtab">
+    <div style="display:flex;gap:4px;align-items:center;width:100%;overflow-x:auto;scrollbar-width:none">
+      <div class="grip"></div>
+      <div class="mode-scroll" id="mbtns">
+        <button class="mode-btn active" data-mode="projected">PROJECTION</button>
+        <button class="mode-btn" data-mode="shells">SHELLS</button>
+        <button class="mode-btn" data-mode="torus">TORUS</button>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-body" id="dbody"><div class="drawer-inner" id="dcont"></div></div>
+</div>
+<script>
+const canvas=document.getElementById('cv'),ctx=canvas.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);
+const PHI=(1+Math.sqrt(5))/2,DELTA=Math.sqrt(5)/10;
+let mode='projected',time=0,zoom=1;
+let rotSpeed=5,projAngle=50,pointSize=5,shellOpacity=30;
+let showD8=true,showSp=true,showRings=true,showLinks=false;
+
+// Pointer handling
+let pointers=new Map(),lastDist=0,dragId=null,dragX=0,dragY=0;
+canvas.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)dragId=e.pointerId;canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId))return;const prev=pointers.get(e.pointerId);
+  if(pointers.size===1&&e.pointerId===dragId){dragX+=(e.clientX-prev.x)*0.005;dragY+=(e.clientY-prev.y)*0.005;}
+  else if(pointers.size===2){const pts=[...pointers.values()];const d=Math.sqrt((pts[0].x-pts[1].x)**2+(pts[0].y-pts[1].y)**2);if(lastDist>0)zoom=Math.max(0.3,Math.min(4,zoom*(d/lastDist)));lastDist=d;}
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+});
+canvas.addEventListener('pointerup',e=>{pointers.delete(e.pointerId);if(pointers.size<2)lastDist=0;if(e.pointerId===dragId)dragId=null});
+canvas.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);if(pointers.size<2)lastDist=0});
+canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(0.3,Math.min(4,zoom*(1-e.deltaY*0.001)))},{passive:false});
+
+function glow(x,y,r,g,b,a,sz,gm=3){
+  const gr=ctx.createRadialGradient(x,y,0,x,y,sz*gm);
+  gr.addColorStop(0,`rgba(${r},${g},${b},${a*0.4})`);gr.addColorStop(0.5,`rgba(${r},${g},${b},${a*0.1})`);gr.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(x,y,sz*gm,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,sz,0,Math.PI*2);ctx.fillStyle=`rgba(${r},${g},${b},${a})`;ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,sz*0.35,0,Math.PI*2);ctx.fillStyle=`rgba(${Math.min(255,r+60)},${Math.min(255,g+60)},${Math.min(255,b+60)},${a*0.7})`;ctx.fill();
+}
+
+function popcount(n){let c=0;while(n){c+=n&1;n>>=1}return c}
+// Build E8 roots
+const roots=[],types=[];
+for(let i=0;i<8;i++)for(let j=i+1;j<8;j++)for(const si of[1,-1])for(const sj of[1,-1]){const v=new Float32Array(8);v[i]=si;v[j]=sj;roots.push(v);types.push('D8');}
+for(let m=0;m<256;m++)if(popcount(m)%2===0){const v=new Float32Array(8);for(let b=0;b<8;b++)v[b]=(m>>b&1)?-0.5:0.5;roots.push(v);types.push('S+');}
+
+function projectE8(r){
+  const p0=(r[0]+PHI*r[1])/Math.sqrt(1+PHI*PHI),p1=(r[2]+PHI*r[3])/Math.sqrt(1+PHI*PHI),p2=(r[4]+PHI*r[5])/Math.sqrt(1+PHI*PHI),p3=(r[6]+PHI*r[7])/Math.sqrt(1+PHI*PHI);
+  return[p0,p1,p2,p3];
+}
+
+const shellK=roots.map((r,i)=>{
+  const p=projectE8(r),r2=p[0]*p[0]+p[1]*p[1]+p[2]*p[2]+p[3]*p[3];
+  if(types[i]==='D8')return r2>1?2:-2;
+  return r2>1?(r2>1.3?3:1):(r2<0.7?-3:-1);
+});
+
+function rot4D(t,phi){
+  const c1=Math.cos(t),s1=Math.sin(t),c2=Math.cos(t*0.7+phi),s2=Math.sin(t*0.7+phi),c3=Math.cos(t*0.4),s3=Math.sin(t*0.4);
+  return v=>{let[x,y,z,w]=v;const x1=x*c1-y*s1,y1=x*s1+y*c1,z1=z*c2-w*s2,w1=z*s2+w*c2,x2=x1*c3-w1*s3,w2=x1*s3+w1*c3;return[x2,y1,z1,w2]};
+}
+
+function proj4D(v4,sc,cx,cy){
+  const f=3.5,d=f-v4[3];return{px:cx+v4[0]/d*sc,py:cy+v4[1]/d*sc,depth:(v4[3]+2)/4};
+}
+
+function drawProjected(W,H){
+  const cx=W/2,cy=H/2,sc=Math.min(W,H)*0.44*zoom;
+  const t=time*rotSpeed*0.0003+dragX,phi=projAngle/100*Math.PI+dragY;
+  const rotFn=rot4D(t,phi);
+
+  if(showRings){
+    const srs=[1-3*DELTA,1-2*DELTA,1-DELTA,1+DELTA,1+2*DELTA,1+3*DELTA];
+    const sks=[-3,-2,-1,1,2,3];
+    sks.forEach((k,i)=>{
+      const r=srs[i];
+      const[cr,cg,cb]=Math.abs(k)===2?[200,169,110]:[255,107,53];
+      ctx.beginPath();ctx.arc(cx,cy,r*sc*0.8,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${cr},${cg},${cb},${shellOpacity/100*0.4})`;ctx.lineWidth=0.7;ctx.stroke();
+    });
+  }
+
+  const pts=roots.map((root,i)=>{
+    const p4=projectE8(root),rot=rotFn(p4),{px,py,depth}=proj4D(rot,sc,cx,cy);
+    return{px,py,depth,type:types[i],k:shellK[i],idx:i};
+  }).sort((a,b)=>a.depth-b.depth);
+
+  if(showLinks){
+    for(let i=0;i<Math.min(pts.length,60);i++){
+      for(let j=i+1;j<Math.min(i+10,pts.length);j++){
+        const dx=pts[i].px-pts[j].px,dy=pts[i].py-pts[j].py;
+        if(dx*dx+dy*dy<3600){ctx.beginPath();ctx.moveTo(pts[i].px,pts[i].py);ctx.lineTo(pts[j].px,pts[j].py);ctx.strokeStyle='rgba(200,169,110,0.06)';ctx.lineWidth=0.5;ctx.stroke();}
+      }
+    }
+  }
+
+  for(const p of pts){
+    if(p.type==='D8'&&!showD8)continue;if(p.type==='S+'&&!showSp)continue;
+    const[cr,cg,cb]=p.type==='D8'?[200,169,110]:[255,107,53];
+    const alpha=0.4+p.depth*0.6;
+    const sz=pointSize*(0.5+p.depth*0.5);
+    glow(p.px,p.py,cr,cg,cb,alpha,sz,Math.abs(p.k)===3?4:2.5);
+  }
+}
+
+function drawShellMode(W,H){
+  const cx=W/2,cy=H/2,sc=Math.min(W,H)*0.35*zoom;
+  const shells=[{k:-3,p:24,r:255,g:107,b:53},{k:-2,p:56,r:200,g:169,b:110},{k:-1,p:40,r:255,g:107,b:53},{k:1,p:40,r:255,g:107,b:53},{k:2,p:56,r:200,g:169,b:110},{k:3,p:24,r:255,g:107,b:53}];
+  const t=time*rotSpeed*0.0003;
+  for(const sh of shells){
+    const rad=Math.sqrt(Math.abs(1+sh.k*DELTA))*sc;
+    ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.strokeStyle=`rgba(${sh.r},${sh.g},${sh.b},0.2)`;ctx.lineWidth=1;ctx.stroke();
+    const N=Math.min(sh.p,30);
+    for(let i=0;i<N;i++){
+      const a=(i/N)*Math.PI*2+t*(sh.k>0?1:-1)*0.5;
+      glow(cx+rad*Math.cos(a),cy+rad*Math.sin(a),sh.r,sh.g,sh.b,0.85,pointSize*0.8,2.5);
+    }
+    ctx.fillStyle=`rgba(${sh.r},${sh.g},${sh.b},0.6)`;ctx.font='500 0.45rem "Space Mono"';
+    ctx.fillText(`k=${sh.k>0?'+':''}${sh.k} (${sh.p})`,cx+rad+8,cy-4);
+  }
+}
+
+function drawTorusMode(W,H){
+  const R=180*zoom,r=70*zoom;
+  const t=time*rotSpeed*0.0002;
+  // Torus wireframe
+  for(let ti=0;ti<48;ti+=4){
+    const th=(ti/48)*Math.PI*2;ctx.beginPath();
+    for(let pi=0;pi<=24;pi++){
+      const ph=(pi/24)*Math.PI*2;
+      const p3={x:(R+r*Math.cos(ph))*Math.cos(th),y:(R+r*Math.cos(ph))*Math.sin(th),z:r*Math.sin(ph)};
+      const ct=Math.cos(t+dragX),st=Math.sin(t+dragX),crx=Math.cos(0.3+dragY),srx=Math.sin(0.3+dragY);
+      const xr=p3.x*ct+p3.z*st,zr=-p3.x*st+p3.z*ct;
+      const yr2=p3.y*crx-zr*srx,zr2=p3.y*srx+zr*crx;
+      const fov=500,d2=zr2+fov,sc2=fov/Math.max(d2,1);
+      const px=W/2+xr*sc2,py=H/2-yr2*sc2;
+      pi===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle='rgba(200,169,110,0.08)';ctx.lineWidth=0.6;ctx.stroke();
+  }
+  // Map 240 roots onto torus
+  const SHELLS=[{k:-3,pop:24,type:'S+'},{k:-2,pop:56,type:'D8'},{k:-1,pop:40,type:'S+'},{k:1,pop:40,type:'S+'},{k:2,pop:56,type:'D8'},{k:3,pop:24,type:'S+'}];
+  const pts=[];
+  for(const sh of SHELLS){
+    for(let i=0;i<sh.pop;i++){
+      const u=(i/sh.pop)*Math.PI*2;
+      let th,ph;
+      if(sh.type==='D8'){th=u;ph=(sh.k>0?0.3:-0.3)+Math.sin(u*7)*0.12;}
+      else{const off=sh.k===1?0:sh.k===-1?Math.PI:sh.k===3?Math.PI/3:Math.PI*4/3;th=off+Math.sin(u*5)*0.15;ph=u;}
+      const p3={x:(R+r*Math.cos(ph))*Math.cos(th),y:(R+r*Math.cos(ph))*Math.sin(th),z:r*Math.sin(ph)};
+      const ct=Math.cos(t+dragX),st=Math.sin(t+dragX),crx=Math.cos(0.3+dragY),srx=Math.sin(0.3+dragY);
+      const xr=p3.x*ct+p3.z*st,zr=-p3.x*st+p3.z*ct;
+      const yr2=p3.y*crx-zr*srx,zr2=p3.y*srx+zr*crx;
+      const fov=500,d2=zr2+fov,sc2=fov/Math.max(d2,1);
+      const[cr,cg,cb]=sh.type==='D8'?[200,169,110]:[255,107,53];
+      pts.push({px:W/2+xr*sc2,py:H/2-yr2*sc2,d:d2,cr,cg,cb});
+    }
+  }
+  pts.sort((a,b)=>b.d-a.d);
+  for(const p of pts){const alpha=(0.3+0.7*(500/p.d))*0.85;glow(p.px,p.py,p.cr,p.cg,p.cb,alpha,3.5,3);}
+  ctx.fillStyle='rgba(200,169,110,0.7)';ctx.font='600 0.5rem "Space Mono"';
+  ctx.fillText('240 E8 roots on T²: D8=major, S+=minor',14,H-16);
+}
+
+function setMode(m){mode=m;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  const hi=document.getElementById('hud-info');if(hi){const l={'projected':'Cross-parity Coxeter projection','shells':'6-shell decomposition [24,56,40,40,56,24]','torus':'240 roots mapped onto Clifford torus T²'};hi.textContent=l[m]||'';}
+}
+
+let drawerOpen=false;
+document.getElementById('dtab').addEventListener('click',e=>{if(e.target.closest('.mode-btn'))return;drawerOpen=!drawerOpen;document.getElementById('dbody').classList.toggle('open',drawerOpen)});
+document.getElementById('mbtns').addEventListener('click',e=>{const b=e.target.closest('.mode-btn');if(b)setMode(b.dataset.mode)});
+document.getElementById('dt').addEventListener('click',()=>document.getElementById('dsb').classList.toggle('collapsed'));
+
+function buildUI(){
+  const html=`
+    <div class="acc open"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Controls</h3><span class="acc-arrow">▾</span></div><div class="acc-body"><div class="acc-content">
+      <div class="ctrl-row"><span class="ctrl-lbl">SPEED</span><input type="range" min="0" max="30" value="${rotSpeed}" oninput="rotSpeed=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${rotSpeed}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">ANGLE</span><input type="range" min="0" max="100" value="${projAngle}" oninput="projAngle=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${projAngle}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">SIZE</span><input type="range" min="2" max="12" value="${pointSize}" oninput="pointSize=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${pointSize}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">SHELLS</span><input type="range" min="0" max="100" value="${shellOpacity}" oninput="shellOpacity=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${shellOpacity}</span></div>
+      <div class="toggle-row">
+        <button class="tog-btn active" onclick="showD8=!showD8;this.classList.toggle('active')">D8</button>
+        <button class="tog-btn active" onclick="showSp=!showSp;this.classList.toggle('active')">S+</button>
+        <button class="tog-btn active" onclick="showRings=!showRings;this.classList.toggle('active')">Rings</button>
+        <button class="tog-btn" onclick="showLinks=!showLinks;this.classList.toggle('active')">Links</button>
+      </div>
+    </div></div></div>
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>6-Shell Decomposition</h3><span class="acc-arrow">▾</span></div><div class="acc-body"><div class="acc-content">
+      <div class="shell-row shell-sp"><span class="shell-k">k=+3</span><div class="shell-bar" style="width:43%"></div><span class="shell-pop">24</span><span class="shell-type">S+</span></div>
+      <div class="shell-row shell-d8"><span class="shell-k">k=+2</span><div class="shell-bar" style="width:100%"></div><span class="shell-pop">56</span><span class="shell-type">D8</span></div>
+      <div class="shell-row shell-sp"><span class="shell-k">k=+1</span><div class="shell-bar" style="width:71%"></div><span class="shell-pop">40</span><span class="shell-type">S+</span></div>
+      <div class="shell-row shell-sp"><span class="shell-k">k=−1</span><div class="shell-bar" style="width:71%"></div><span class="shell-pop">40</span><span class="shell-type">S+</span></div>
+      <div class="shell-row shell-d8"><span class="shell-k">k=−2</span><div class="shell-bar" style="width:100%"></div><span class="shell-pop">56</span><span class="shell-type">D8</span></div>
+      <div class="shell-row shell-sp"><span class="shell-k">k=−3</span><div class="shell-bar" style="width:43%"></div><span class="shell-pop">24</span><span class="shell-type">S+</span></div>
+    </div></div></div>
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Key Metrics</h3><span class="acc-arrow">▾</span></div><div class="acc-body"><div class="acc-content">
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">TOTAL ROOTS</div><div class="metric-value">240 = 8h</div></div>
+        <div class="metric"><div class="metric-label">COXETER h</div><div class="metric-value">30</div></div>
+        <div class="metric"><div class="metric-label">D8 ROOTS</div><div class="metric-value">112</div></div>
+        <div class="metric"><div class="metric-label">S+ ROOTS</div><div class="metric-value">128</div></div>
+        <div class="metric"><div class="metric-label">SHELL δ</div><div class="metric-value">√5/10</div></div>
+        <div class="metric"><div class="metric-label">TYPE PURITY</div><div class="metric-value">100%</div></div>
+        <div class="metric"><div class="metric-label">FREE INFO</div><div class="metric-value">0.997 bits</div></div>
+        <div class="metric"><div class="metric-label">FIELD</div><div class="metric-value">Q(√5)</div></div>
+      </div>
+    </div></div></div>
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Algebraic</h3><span class="acc-arrow">▾</span></div><div class="acc-body"><div class="acc-content">
+      <div class="math-box">r²_k = 1 + k·δ, δ = √5/10<br>k ∈ {±1, ±2, ±3}<br>D8 ↔ |k| even : S+ ↔ |k| odd<br><br>T-33: S² = p·φ⁶/(2h)<br>Entire framework from (3,5)</div>
+    </div></div></div>
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Legend</h3><span class="acc-arrow">▾</span></div><div class="acc-body"><div class="acc-content">
+      <div class="legend-row"><div class="leg-dot" style="background:var(--gold)"></div><div class="leg-txt">D8 Integer (k=±2)</div></div>
+      <div class="legend-row"><div class="leg-dot" style="background:var(--orange)"></div><div class="leg-txt">S+ Spinor (k=±1,±3)</div></div>
+    </div></div></div>`;
+  document.getElementById('dcont').innerHTML=html;
+  const dsb=document.getElementById('dsb');
+  if(dsb)dsb.innerHTML=`<div style="margin-bottom:12px"><div class="mode-scroll" id="mbtnsd">${['projected','shells','torus'].map(m=>`<button class="mode-btn${m==='projected'?' active':''}" data-mode="${m}">${m.toUpperCase()}</button>`).join('')}</div></div>`+html;
+  const d=document.getElementById('mbtnsd');if(d)d.addEventListener('click',e=>{const b=e.target.closest('.mode-btn');if(b)setMode(b.dataset.mode)});
+}
+
+function resize(){const w=innerWidth,h=innerHeight;canvas.width=w*dpr;canvas.height=h*dpr;canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}
+function render(){
+  const W=canvas.width/dpr,H=canvas.height/dpr;ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(200,169,110,0.02)';ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  if(mode==='projected')drawProjected(W,H);else if(mode==='shells')drawShellMode(W,H);else drawTorusMode(W,H);
+  time++;requestAnimationFrame(render);
+}
+buildUI();resize();render();addEventListener('resize',resize);
+</script>
+</body>
+</html>

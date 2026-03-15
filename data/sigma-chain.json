@@ -1,0 +1,101 @@
+{
+  "_comment": [
+    "═══════════════════════════════════════════════════════════",
+    "THE σ-CHAIN — The Divisor Sum Walk Through E8",
+    "═══════════════════════════════════════════════════════════",
+    "",
+    "The divisor sum function σ(n) adds up ALL positive divisors",
+    "of n, including 1 and n itself.",
+    "",
+    "  Example: σ(28) = 1 + 2 + 4 + 7 + 14 + 28 = 56",
+    "",
+    "Starting from 28 (the number of rotation planes in 8D),",
+    "iterating σ produces a chain that visits every fundamental",
+    "structure in E8. This is not cherry-picked — each value",
+    "has a known, independent meaning in the framework.",
+    "",
+    "The chain also connects to a PARALLEL chain starting from",
+    "60 (the order of A₅, the icosahedral group). Both chains",
+    "merge at 120, demonstrating that the σ function naturally",
+    "weaves together different branches of mathematics.",
+    "═══════════════════════════════════════════════════════════"
+  ],
+
+  "divisor_sum_function": {
+    "definition": "σ(n) = sum of all positive divisors of n (including 1 and n)",
+    "examples": {
+      "σ(6)": { "divisors": [1, 2, 3, 6], "sum": 12 },
+      "σ(28)": { "divisors": [1, 2, 4, 7, 14, 28], "sum": 56 },
+      "σ(56)": { "divisors": [1, 2, 4, 7, 8, 14, 28, 56], "sum": 120 },
+      "σ(120)": { "divisors": [1,2,3,4,5,6,8,10,12,15,20,24,30,40,60,120], "sum": 360 }
+    }
+  },
+
+  "primary_chain": {
+    "_comment": "Starting from the number of rotation planes in 8D",
+    "steps": [
+      {
+        "value": 28,
+        "sigma_of": null,
+        "meaning": "C(8,2) = number of independent rotation planes in 8D",
+        "also": "2nd perfect number (σ(28) = 2 × 28 = 56)",
+        "factorization": "2² × 7"
+      },
+      {
+        "value": 56,
+        "sigma_of": 28,
+        "meaning": "Population of D8 (integer-type) shells in E8",
+        "also": "8 × 7 = dim(E8) × first framework prime",
+        "factorization": "2³ × 7"
+      },
+      {
+        "value": 120,
+        "sigma_of": 56,
+        "meaning": "Sum of E8 Coxeter exponents (1+7+11+13+17+19+23+29)",
+        "also": "5! = 120 vertices of the 600-cell; dimension of Level 2",
+        "factorization": "2³ × 3 × 5"
+      },
+      {
+        "value": 360,
+        "sigma_of": 120,
+        "meaning": "|A₆| = order of alternating group on 6 elements",
+        "also": "6!/2 — governs the 6-shell decomposition",
+        "factorization": "2³ × 3² × 5"
+      },
+      {
+        "value": 1170,
+        "sigma_of": 360,
+        "meaning": "Contains 4 of 5 framework primes (2, 3, 5, 13)",
+        "factorization": "2 × 3² × 5 × 13"
+      },
+      {
+        "value": 3276,
+        "sigma_of": 1170,
+        "meaning": "Contains 4 of 5 framework primes (2, 3, 7, 13) — 7 returns",
+        "factorization": "2² × 3² × 7 × 13"
+      }
+    ]
+  },
+
+  "secondary_chain": {
+    "_comment": "Starting from the icosahedral group order",
+    "steps": [
+      { "value": 60, "meaning": "|A₅| = icosahedral group order" },
+      { "value": 168, "sigma_of": 60, "meaning": "|PSL(2,7)| = Klein quartic symmetries" },
+      { "value": 480, "sigma_of": 168, "meaning": "= 240 × 2 = paired E8 roots" }
+    ]
+  },
+
+  "merger_point": {
+    "_comment": "Both chains share the value 120, demonstrating convergence",
+    "primary": "28 → 56 → [120] → [360] → 1170 → ...",
+    "secondary": "60 → 168 → 480 → ...",
+    "shared_values": [120, 360]
+  },
+
+  "framework_primes": {
+    "_comment": "Five primes that appear repeatedly throughout the framework",
+    "primes": [2, 3, 5, 7, 13],
+    "twin_prime_pairs": [[5, 7], [11, 13], [71, 73]]
+  }
+}

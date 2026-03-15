@@ -1,0 +1,60 @@
+<!--
+  SLIDE 4 — THE STEREOSCOPIC PARITY PROJECTION
+  ═════════════════════════════════════════════
+  Duration: ~2.5 minutes
+  Purpose:  Explain the projection technique accessibly.
+
+  THE MATH (for those reading the code):
+  ───────────────────────────────────────
+  The standard Coxeter projection uses the eigenvectors of the
+  Coxeter element w (a product of simple reflections) to project
+  from 8D to 2D. The eigenvalues are e^(2πi·mⱼ/h) where h=30
+  is the Coxeter number and mⱼ are the exponents [1,7,11,13,17,19,23,29].
+
+  The STEREOSCOPIC PARITY PROJECTION conjugates w by a parity
+  involution P (which negates one coordinate):
+    w' = P · w · P⁻¹
+
+  This has the effect of "flipping" the projection so that the
+  two root types (D8 integer and S+ half-integer) separate into
+  distinct radial shells rather than overlapping.
+
+  The shell radii satisfy: r²ₖ = 1 + k · √5/10
+  where √5 = 2φ - 1 and φ is the golden ratio.
+
+  The golden ratio appearing here is NOT imposed — it emerges
+  from the E8 Coxeter eigenvalues. The exponents of E8 happen
+  to produce eigenvalue magnitudes that space themselves in
+  golden-ratio increments under parity conjugation.
+-->
+<section class="slide"
+  data-notes="~2.5 min. 'The standard projection mixes everything together. I found that if you flip one coordinate axis — a parity involution — before projecting, the two types of roots separate perfectly into distinct shells. This is what I call the stereoscopic parity projection.' Point to the equation. 'The golden ratio appears in the shell spacing — not because I put it there, but because E8 puts it there.'">
+
+  <h2>The Stereoscopic Parity Projection</h2>
+  <div class="gap"></div>
+
+  <div class="split">
+    <div class="split-half">
+      <h3>The Discovery</h3>
+      <p class="desc" style="text-align:left;font-size:clamp(.95rem,1.6vw,1.25rem)">
+        Conjugate the Coxeter element by a parity involution — flip one
+        coordinate axis, then project.
+      </p>
+      <div class="gap"></div>
+      <p class="desc" style="text-align:left;font-size:clamp(.95rem,1.6vw,1.25rem)">
+        This separates the <strong style="color:var(--gold)">112 integer roots</strong> (D8)
+        from the <strong style="color:var(--cyan)">128 spinor roots</strong> (S+) into distinct shells.
+      </p>
+    </div>
+
+    <div class="split-half" style="text-align:center">
+      <h3>Shell Radii</h3>
+      <div class="eq eq-lg">r²<sub>k</sub> = 1 + k · <span class="gold">√5</span>/10</div>
+      <div class="gap"></div>
+      <p class="desc-sm">
+        The golden ratio √5 appears in the shell spacing —<br>
+        not imposed, but <em>emergent</em> from E8 geometry.
+      </p>
+    </div>
+  </div>
+</section>

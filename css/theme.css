@@ -1,0 +1,183 @@
+/*
+ * ══════════════════════════════════════════════════════════════
+ * THEME.CSS — Design Tokens for the G.O.D. Presentation
+ * ══════════════════════════════════════════════════════════════
+ *
+ * This file defines the visual language shared across the entire
+ * Geometric Orthogonal Dynamics framework. Every color, font,
+ * and spacing value used in the presentation traces back here.
+ *
+ * COLOR PHILOSOPHY
+ * ────────────────
+ * The palette mirrors the mathematics:
+ *   Gold   (#c8a96e)  →  D8 integer roots (112 of them)
+ *   Cyan   (#00e5ff)  →  S+ spinor roots (128 of them)
+ *   Purple (#bf7fff)  →  Mixed shells / conjectures
+ *   Orange (#ff6b35)  →  Action / energy / emphasis
+ *
+ * The deep background (#050508) is chosen to make the lattice
+ * visualizations feel like looking into space — which, in a
+ * sense, is exactly what 8-dimensional geometry is.
+ *
+ * TYPOGRAPHY
+ * ──────────
+ * Crimson Pro (serif, 200–600 weight) — Display text.
+ *   Light weight evokes mathematical elegance.
+ * Space Mono (monospace) — Data, equations, UI labels.
+ *   Precision and readability for numerical content.
+ */
+
+:root {
+  /* ── Core Palette ── */
+  --gold:       #c8a96e;
+  --gold-dim:   rgba(200, 169, 110, 0.4);
+  --cyan:       #00e5ff;
+  --cyan-dim:   rgba(0, 229, 255, 0.4);
+  --purple:     #bf7fff;
+  --purple-dim: rgba(191, 127, 255, 0.4);
+  --orange:     #ff6b35;
+
+  /* ── Backgrounds ── */
+  --deep:       #050508;       /* Main background — almost black */
+  --panel:      rgba(5, 5, 12, 0.96);  /* Glassmorphism panels */
+  --panel-light:rgba(12, 12, 20, 0.85);
+
+  /* ── Borders ── */
+  --border:     rgba(200, 169, 110, 0.15);
+  --border-dim: rgba(200, 169, 110, 0.08);
+
+  /* ── Text ── */
+  --text:       #e8e0d0;       /* Primary — warm beige */
+  --text-bright:#f4f0e8;       /* Headings — near white */
+  --text-dim:   #7a7060;       /* Secondary — muted */
+
+  /* ── Spacing ── */
+  --gap-sm:     0.6rem;
+  --gap:        1.2rem;
+  --gap-lg:     2.4rem;
+  --gap-xl:     4rem;
+
+  /* ── Transitions ── */
+  --ease:       cubic-bezier(0.22, 1, 0.36, 1);
+  --duration:   0.5s;
+
+  /* ── Typography Scale ──
+   * Uses clamp() for fluid sizing:
+   *   clamp(min, preferred, max)
+   * This ensures readability on both a phone screen
+   * (someone watching the YouTube stream) and a
+   * 1920×1080 screen share.
+   */
+  --fs-hero:    clamp(2rem, 5vw, 4.2rem);
+  --fs-h2:      clamp(1.6rem, 3.5vw, 3rem);
+  --fs-h3:      clamp(0.85rem, 1.8vw, 1.3rem);
+  --fs-body:    clamp(1rem, 2vw, 1.55rem);
+  --fs-body-sm: clamp(0.9rem, 1.6vw, 1.25rem);
+  --fs-eq:      clamp(1rem, 2.2vw, 1.6rem);
+  --fs-eq-lg:   clamp(1.4rem, 3vw, 2.4rem);
+  --fs-mono-sm: clamp(0.7rem, 1.2vw, 0.95rem);
+  --fs-big-num: clamp(4rem, 10vw, 9rem);
+}
+
+/* ── Reset ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--deep);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography ── */
+h1 {
+  font-family: 'Crimson Pro', serif;
+  font-weight: 200;
+  font-size: var(--fs-hero);
+  color: var(--text-bright);
+  text-align: center;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+}
+
+h2 {
+  font-family: 'Crimson Pro', serif;
+  font-weight: 300;
+  font-size: var(--fs-h2);
+  color: var(--gold);
+  text-align: center;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+
+h3 {
+  font-family: 'Space Mono', monospace;
+  font-weight: 400;
+  font-size: var(--fs-h3);
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 1rem;
+}
+
+p, .desc {
+  font-family: 'Crimson Pro', serif;
+  font-weight: 300;
+  font-size: var(--fs-body);
+  color: var(--text);
+  line-height: 1.6;
+  text-align: center;
+  max-width: 52em;
+}
+
+.desc-sm {
+  font-size: var(--fs-body-sm);
+  color: var(--text-dim);
+}
+
+/* ── Equation Text ──
+ * Used for inline math displays. We use Space Mono
+ * for precision — every digit lines up perfectly.
+ */
+.eq {
+  font-family: 'Space Mono', monospace;
+  font-size: var(--fs-eq);
+  color: var(--gold);
+  text-align: center;
+  line-height: 1.8;
+  white-space: pre-line;
+  margin: var(--gap) 0;
+}
+
+.eq-lg { font-size: var(--fs-eq-lg); }
+
+/* Color spans for equations */
+.eq .cyan   { color: var(--cyan); }
+.eq .purple { color: var(--purple); }
+.eq .gold   { color: var(--gold); }
+.eq .dim    { color: var(--text-dim); }
+.eq .bright { color: var(--text-bright); }
+
+blockquote {
+  border-left: 3px solid var(--gold);
+  padding: 0.8rem 1.4rem;
+  margin: var(--gap) 0;
+  font-style: italic;
+  color: var(--text);
+  max-width: 44em;
+  font-size: var(--fs-body-sm);
+  line-height: 1.6;
+}
+
+/* ── Utility Spacers ── */
+.gap    { height: var(--gap); }
+.gap-lg { height: var(--gap-lg); }
+.gap-xl { height: var(--gap-xl); }

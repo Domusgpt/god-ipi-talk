@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Klein Quartic — Deep Exploration · G.O.D. Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;1,200&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c8a96e;--gold-dim:#5a4a30;--gold-bright:#e8c97e;--orange:#ff6b35;--cyan:#00e5ff;--purple:#bf7fff;--red:#ff3355;--green:#44ff88;--deep:#020208;--panel:rgba(3,3,10,0.95);--border:rgba(200,169,110,0.14);--text:#e8e0d4;--text-dim:#7a7060;--mono:'Space Mono',monospace;--serif:'Crimson Pro',serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--text);font-family:var(--serif);touch-action:none}
+#cv{position:fixed;top:0;left:0;width:100%;height:100%;display:block;z-index:0}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;gap:0.5rem;padding:0 1rem;height:40px;background:rgba(2,2,8,0.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(200,169,110,0.08)}
+.topbar a{color:var(--text-dim);text-decoration:none;font:600 0.6rem var(--mono);letter-spacing:0.1em}
+.topbar a:hover{color:var(--gold)}
+.topbar-title{font:400 0.48rem var(--mono);color:var(--gold);letter-spacing:0.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-spacer{flex:1}
+.topbar-info{font:400 0.42rem var(--mono);color:var(--text-dim)}
+
+.hud{position:fixed;z-index:100;pointer-events:none}
+.hud-tl{top:50px;left:12px;max-width:320px}
+.hud-tr{top:50px;right:12px;text-align:right;max-width:320px}
+.hud-bl{bottom:70px;left:12px;max-width:300px}
+.hud-br{bottom:70px;right:12px;text-align:right;max-width:260px}
+.hi{font:400 0.5rem var(--mono);margin-bottom:2px;text-shadow:0 0 8px currentColor}
+.hi-gold{color:var(--gold)}.hi-cyan{color:var(--cyan)}.hi-purple{color:var(--purple)}.hi-dim{color:var(--text-dim);opacity:0.45}.hi-green{color:var(--green)}
+
+.narr{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:150;pointer-events:none;text-align:center;opacity:0;transition:opacity 0.4s}
+.narr.show{opacity:1}
+.narr-title{font:200 2rem var(--serif);color:var(--gold);text-shadow:0 0 30px rgba(200,169,110,0.4);margin-bottom:0.3rem}
+.narr-text{font:300 0.85rem var(--serif);color:var(--text-dim);max-width:400px;margin:0 auto;line-height:1.6}
+.narr-eq{font:400 0.55rem var(--mono);color:var(--gold);margin-top:0.4rem;opacity:0.7}
+
+.drawer-handle{position:fixed;bottom:0;left:0;right:0;z-index:300;display:flex;flex-direction:column;align-items:center}
+.drawer-tab{display:flex;align-items:center;gap:0.4rem;width:100%;padding:6px 10px;background:var(--panel);border-top:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;flex-wrap:wrap}
+.grip{width:36px;height:4px;border-radius:2px;background:rgba(200,169,110,0.25);flex-shrink:0}
+.mode-scroll{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1}
+.mode-scroll::-webkit-scrollbar{display:none}
+.mbtn{font:400 0.42rem var(--mono);letter-spacing:0.05em;padding:4px 7px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0}
+.mbtn.active{background:rgba(200,169,110,0.15);border-color:var(--gold);color:var(--gold);box-shadow:0 0 10px rgba(200,169,110,0.1)}
+.vp-scroll{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;width:100%;margin-top:2px}
+.vp-scroll::-webkit-scrollbar{display:none}
+.vpbtn{font:400 0.38rem var(--mono);letter-spacing:0.04em;padding:3px 6px;border:1px solid rgba(200,169,110,0.08);background:transparent;color:var(--text-dim);border-radius:2px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.15s}
+.vpbtn.active{color:var(--cyan);border-color:rgba(0,229,255,0.2)}
+.vpbtn .kbd{color:var(--gold-dim);margin-left:2px}
+
+.drawer-body{width:100%;max-height:0;overflow:hidden;overflow-y:auto;background:var(--panel);transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);-webkit-overflow-scrolling:touch}
+.drawer-body.open{max-height:50vh}
+.drawer-body::-webkit-scrollbar{width:3px}
+.drawer-body::-webkit-scrollbar-thumb{background:rgba(200,169,110,0.15)}
+.di{padding:10px 14px 20px}
+
+.ctrl-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.ctrl-lbl{font:400 0.42rem var(--mono);color:var(--text-dim);letter-spacing:0.08em;min-width:48px}
+input[type=range]{flex:1;accent-color:var(--gold);height:16px}
+.sv{font:400 0.42rem var(--mono);color:var(--gold);min-width:24px;text-align:right}
+.tog-row{display:flex;gap:3px;flex-wrap:wrap;margin:6px 0}
+.tog{font:400 0.4rem var(--mono);letter-spacing:0.05em;padding:3px 7px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;transition:all 0.12s}
+.tog.on{background:rgba(200,169,110,0.1);border-color:var(--gold);color:var(--gold)}
+.math-box{font:400 0.5rem var(--mono);color:var(--gold);line-height:1.7;padding:5px 7px;background:rgba(200,169,110,0.03);border:1px solid rgba(200,169,110,0.1);border-radius:3px;margin-top:6px}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../index.html">&larr; G.O.D.</a>
+  <span class="topbar-title">KLEIN QUARTIC &middot; DEEP EXPLORATION</span>
+  <span class="topbar-spacer"></span>
+  <span class="topbar-info" id="fps">60</span>
+</div>
+
+<div class="hud hud-tl" id="htl"></div>
+<div class="hud hud-tr" id="htr"></div>
+<div class="hud hud-bl" id="hbl"></div>
+<div class="hud hud-br" id="hbr"></div>
+
+<div class="narr" id="narr">
+  <div class="narr-title" id="nt"></div>
+  <div class="narr-text" id="nx"></div>
+  <div class="narr-eq" id="ne"></div>
+</div>
+
+<div class="drawer-handle">
+  <div class="drawer-tab" id="dtab">
+    <div class="grip" onclick="document.querySelector('.drawer-body').classList.toggle('open')"></div>
+    <div class="mode-scroll" id="mscroll"></div>
+    <div class="vp-scroll" id="vpscroll"></div>
+  </div>
+  <div class="drawer-body">
+    <div class="di" id="di">
+      <div class="ctrl-row"><span class="ctrl-lbl">DEPTH</span><input type="range" min="2" max="7" value="5" id="sl-depth"><span class="sv" id="sv-depth">5</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">BLOOM</span><input type="range" min="0" max="100" value="45" id="sl-bloom"><span class="sv" id="sv-bloom">0.45</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">SPEED</span><input type="range" min="0" max="200" value="50" id="sl-speed"><span class="sv" id="sv-speed">0.5</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">OPACITY</span><input type="range" min="5" max="100" value="70" id="sl-opacity"><span class="sv" id="sv-opacity">70</span></div>
+      <div class="tog-row">
+        <button class="tog on" id="t-edges" onclick="toggleVis('edges',this)">EDGES</button>
+        <button class="tog on" id="t-fills" onclick="toggleVis('fills',this)">FILLS</button>
+        <button class="tog on" id="t-verts" onclick="toggleVis('verts',this)">VERTICES</button>
+        <button class="tog on" id="t-boundary" onclick="toggleVis('boundary',this)">BOUNDARY</button>
+        <button class="tog" id="t-dual" onclick="toggleVis('dual',this)">DUAL OVERLAY</button>
+      </div>
+      <div class="math-box" id="mbox">|PSL(2,7)| = 168 = 84(g−1)<br>genus 3 · Hurwitz bound · {7,3} tiling<br>24 vertices · 84 edges · 56 faces</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const TAU=Math.PI*2, PI=Math.PI, PHI=(1+Math.sqrt(5))/2;
+
+// ── SCENE ──
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x020208);
+scene.fog=new THREE.FogExp2(0x020208,0.018);
+
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,0.01,200);
+camera.position.set(0,3,4);
+
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.3;
+document.getElementById('cv')?.remove();
+document.body.prepend(renderer.domElement);
+renderer.domElement.id='cv';
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=0.08;
+controls.minDistance=0.1;
+controls.maxDistance=30;
+controls.target.set(0,0,0);
+
+// ── BLOOM ──
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),0.45,0.9,0.35);
+composer.addPass(bloom);
+
+// ── RESIZE ──
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  composer.setSize(innerWidth,innerHeight);
+});
+
+// ── STATE ──
+const vis={edges:true,fills:true,verts:true,boundary:true,dual:false};
+let speed=0.5, opacity=0.7, maxDepth=5, t=0;
+let currentMode=0, narrTimer=null;
+let vpTarget=null, vpLookTarget=null, vpLerp=0;
+
+function toggleVis(key,btn){vis[key]=!vis[key];btn.classList.toggle('on',vis[key]);updateVisibility();}
+window.toggleVis=toggleVis;
+
+// ── GROUPS ──
+const poincareGroup=new THREE.Group();
+const genusGroup=new THREE.Group();
+const hyperGroup=new THREE.Group();
+const fanoGroup=new THREE.Group();
+const dualGroup=new THREE.Group();
+const symmetryGroup=new THREE.Group();
+const sigmaGroup=new THREE.Group();
+const boundaryGroup=new THREE.Group();
+
+scene.add(poincareGroup, genusGroup, hyperGroup, fanoGroup, dualGroup, symmetryGroup, sigmaGroup, boundaryGroup);
+
+// ── MATERIALS ──
+const depthMats=[];
+for(let d=0;d<8;d++){
+  const hue=(d*40+30)%360;
+  depthMats.push(new THREE.MeshBasicMaterial({
+    color:new THREE.Color(`hsl(${hue},55%,50%)`),
+    transparent:true, opacity:0.18-d*0.018, side:THREE.DoubleSide, depthWrite:false
+  }));
+}
+const edgeMats=[];
+for(let d=0;d<8;d++){
+  const hue=(d*40+30)%360;
+  edgeMats.push(new THREE.LineBasicMaterial({
+    color:new THREE.Color(`hsl(${hue},65%,60%)`),
+    transparent:true, opacity:0.55-d*0.06
+  }));
+}
+const vertMat=new THREE.MeshBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.9});
+const vertGlowMat=new THREE.MeshBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.12,depthWrite:false});
+const vertGeo=new THREE.SphereGeometry(0.015,6,6);
+const vertGlowGeo=new THREE.SphereGeometry(0.05,8,8);
+
+// ═══════════════════════════════════════════════
+// {7,3} POINCARE DISK TILING — 3D mesh faces
+// ═══════════════════════════════════════════════
+const DISK_R=2.0;
+let heptCount=0;
+
+function buildPoincare(){
+  // Clear previous
+  while(poincareGroup.children.length) poincareGroup.remove(poincareGroup.children[0]);
+  heptCount=0;
+
+  // Boundary circle
+  while(boundaryGroup.children.length) boundaryGroup.remove(boundaryGroup.children[0]);
+  const ringGeo=new THREE.RingGeometry(DISK_R-0.005,DISK_R+0.005,128);
+  const ringMat=new THREE.MeshBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.2,side:THREE.DoubleSide});
+  const ring=new THREE.Mesh(ringGeo,ringMat);
+  ring.rotation.x=-PI/2;
+  boundaryGroup.add(ring);
+
+  // Disk background
+  const diskGeo=new THREE.CircleGeometry(DISK_R,128);
+  const diskMat=new THREE.MeshBasicMaterial({color:0x050510,transparent:true,opacity:0.5,side:THREE.DoubleSide});
+  const disk=new THREE.Mesh(diskGeo,diskMat);
+  disk.rotation.x=-PI/2;
+  disk.position.y=-0.002;
+  boundaryGroup.add(disk);
+
+  buildHeptagon(0,0,DISK_R*0.28,0,0);
+  updateHUD();
+}
+
+function buildHeptagon(cx,cz,r,depth,parentAngle){
+  if(depth>maxDepth||r<0.005) return;
+  heptCount++;
+
+  const pts=[];
+  for(let i=0;i<7;i++){
+    const a=TAU*i/7+parentAngle;
+    pts.push([cx+Math.cos(a)*r, cz+Math.sin(a)*r]);
+  }
+
+  // Face mesh
+  if(vis.fills){
+    const shape=new THREE.Shape();
+    shape.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<7;i++) shape.lineTo(pts[i][0],pts[i][1]);
+    shape.closePath();
+    const geo=new THREE.ShapeGeometry(shape);
+    const mat=depthMats[Math.min(depth,7)];
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.rotation.x=-PI/2;
+    mesh.position.y=depth*0.001;
+    poincareGroup.add(mesh);
+  }
+
+  // Edge lines
+  if(vis.edges){
+    const linePoints=[];
+    for(let i=0;i<=7;i++){
+      const p=pts[i%7];
+      linePoints.push(new THREE.Vector3(p[0],depth*0.001+0.0005,p[1]));
+    }
+    const lineGeo=new THREE.BufferGeometry().setFromPoints(linePoints);
+    const lineMesh=new THREE.Line(lineGeo,edgeMats[Math.min(depth,7)]);
+    poincareGroup.add(lineMesh);
+  }
+
+  // Vertex dots with glow halos
+  if(vis.verts&&depth<4){
+    pts.forEach(p=>{
+      const dot=new THREE.Mesh(vertGeo,vertMat);
+      dot.position.set(p[0],depth*0.001+0.002,p[1]);
+      poincareGroup.add(dot);
+      if(depth<2){
+        const glow=new THREE.Mesh(vertGlowGeo,vertGlowMat);
+        glow.position.copy(dot.position);
+        poincareGroup.add(glow);
+      }
+    });
+  }
+
+  // Recurse
+  if(depth<maxDepth){
+    for(let i=0;i<7;i++){
+      const a=TAU*i/7+TAU/14+parentAngle;
+      const shrink=0.52-depth*0.01;
+      const dist=r*1.35;
+      const ncx=cx+Math.cos(a)*dist;
+      const ncz=cz+Math.sin(a)*dist;
+      const dx=ncx, dz=ncz;
+      if(Math.sqrt(dx*dx+dz*dz)+r*shrink<DISK_R*0.97){
+        buildHeptagon(ncx,ncz,r*shrink,depth+1,a+PI);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// DUAL {3,7} TILING — triangles meeting 7 at vertex
+// Built from heptagon centers as vertices
+// ═══════════════════════════════════════════════
+function buildDual(){
+  while(dualGroup.children.length) dualGroup.remove(dualGroup.children[0]);
+
+  // Collect heptagon centers from a recursive pass
+  const centers=[];
+  function collectCenters(cx,cz,r,depth,pa){
+    if(depth>Math.min(maxDepth,4)||r<0.01) return;
+    centers.push([cx,cz,r,depth]);
+    if(depth<Math.min(maxDepth,4)){
+      for(let i=0;i<7;i++){
+        const a=TAU*i/7+TAU/14+pa;
+        const shrink=0.52-depth*0.01;
+        const ncx=cx+Math.cos(a)*r*1.35;
+        const ncz=cz+Math.sin(a)*r*1.35;
+        if(Math.sqrt(ncx*ncx+ncz*ncz)+r*shrink<DISK_R*0.97){
+          collectCenters(ncx,ncz,r*shrink,depth+1,a+PI);
+        }
+      }
+    }
+  }
+  collectCenters(0,0,DISK_R*0.28,0,0);
+
+  // Connect nearby centers to form triangles (Delaunay-like)
+  const triMat=new THREE.MeshBasicMaterial({color:0xff3355,transparent:true,opacity:0.08,side:THREE.DoubleSide,depthWrite:false});
+  const triEdgeMat=new THREE.LineBasicMaterial({color:0xff3355,transparent:true,opacity:0.2});
+
+  for(let i=0;i<centers.length;i++){
+    for(let j=i+1;j<centers.length;j++){
+      const dx=centers[i][0]-centers[j][0], dz=centers[i][1]-centers[j][1];
+      const d=Math.sqrt(dx*dx+dz*dz);
+      const threshold=centers[i][2]*1.5+centers[j][2]*1.5;
+      if(d<threshold&&d>0.01){
+        // Edge line
+        const pts=[
+          new THREE.Vector3(centers[i][0],0.005,centers[i][1]),
+          new THREE.Vector3(centers[j][0],0.005,centers[j][1])
+        ];
+        dualGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),triEdgeMat));
+      }
+    }
+  }
+
+  // Dual vertex dots at heptagon centers
+  const dualVertMat=new THREE.MeshBasicMaterial({color:0xff3355,transparent:true,opacity:0.6});
+  centers.forEach(c=>{
+    const dot=new THREE.Mesh(new THREE.SphereGeometry(0.012,6,6),dualVertMat);
+    dot.position.set(c[0],0.006,c[1]);
+    dualGroup.add(dot);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// GENUS-3 SURFACE — 3-holed torus with Klein vertices
+// ═══════════════════════════════════════════════
+function buildGenus3(){
+  while(genusGroup.children.length) genusGroup.remove(genusGroup.children[0]);
+
+  const R=1.2, r=0.45; // Major/minor radii for tori
+  const segs=64, tubSegs=32;
+
+  // Build 3 connected tori
+  for(let ti=0;ti<3;ti++){
+    const baseAngle=TAU*ti/3;
+    const positions=[], indices=[], uvs=[];
+
+    for(let i=0;i<=segs;i++){
+      const u=TAU*i/segs;
+      for(let j=0;j<=tubSegs;j++){
+        const v=TAU*j/tubSegs;
+        // Torus parameterization with offset
+        const cx=Math.cos(baseAngle)*R*0.6;
+        const cz=Math.sin(baseAngle)*R*0.6;
+        const lr=r*(1+0.15*Math.sin(u*3)); // slight genus warping
+        const x=cx+(R*0.55+lr*Math.cos(v))*Math.cos(u+baseAngle);
+        const z=cz+(R*0.55+lr*Math.cos(v))*Math.sin(u+baseAngle);
+        const y=lr*Math.sin(v)*0.9;
+        positions.push(x,y,z);
+        uvs.push(i/segs,j/tubSegs);
+      }
+    }
+
+    for(let i=0;i<segs;i++){
+      for(let j=0;j<tubSegs;j++){
+        const a=i*(tubSegs+1)+j;
+        const b=a+tubSegs+1;
+        indices.push(a,b,a+1, b,b+1,a+1);
+      }
+    }
+
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+
+    const hue=(ti*120+200)%360;
+    const mat=new THREE.MeshStandardMaterial({
+      color:new THREE.Color(`hsl(${hue},50%,40%)`),
+      transparent:true, opacity:0.25, side:THREE.DoubleSide,
+      metalness:0.3, roughness:0.6, depthWrite:false,
+      wireframe:false
+    });
+    const mesh=new THREE.Mesh(geo,mat);
+    genusGroup.add(mesh);
+
+    // Wireframe overlay
+    const wireMat=new THREE.MeshBasicMaterial({
+      color:new THREE.Color(`hsl(${hue},60%,55%)`),
+      transparent:true, opacity:0.08, wireframe:true, side:THREE.DoubleSide
+    });
+    genusGroup.add(new THREE.Mesh(geo.clone(),wireMat));
+  }
+
+  // Add ambient + directional lights for genus surface
+  const ambLight=new THREE.AmbientLight(0x222244,0.6);
+  ambLight.userData.genusLight=true;
+  genusGroup.add(ambLight);
+  const dirLight=new THREE.DirectionalLight(0xc8a96e,0.8);
+  dirLight.position.set(3,5,2);
+  dirLight.userData.genusLight=true;
+  genusGroup.add(dirLight);
+
+  // Place 24 Klein quartic vertices on the surface
+  const kleinVerts=[];
+  for(let i=0;i<24;i++){
+    const torusIdx=i%3;
+    const angle=TAU*(Math.floor(i/3))/8;
+    const baseAngle=TAU*torusIdx/3;
+    const cx=Math.cos(baseAngle)*R*0.6;
+    const cz=Math.sin(baseAngle)*R*0.6;
+    const vAngle=TAU*(i%8)/8;
+    const x=cx+(R*0.55+r*Math.cos(vAngle))*Math.cos(angle+baseAngle);
+    const z=cz+(R*0.55+r*Math.cos(vAngle))*Math.sin(angle+baseAngle);
+    const y=r*Math.sin(vAngle)*0.9;
+    kleinVerts.push(new THREE.Vector3(x,y,z));
+
+    const dot=new THREE.Mesh(
+      new THREE.SphereGeometry(0.03,8,8),
+      new THREE.MeshBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.9})
+    );
+    dot.position.copy(kleinVerts[i]);
+    genusGroup.add(dot);
+    // Glow halo
+    const gh=new THREE.Mesh(
+      new THREE.SphereGeometry(0.08,6,6),
+      new THREE.MeshBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.12,depthWrite:false})
+    );
+    gh.position.copy(kleinVerts[i]);
+    genusGroup.add(gh);
+  }
+
+  // Connect nearby vertices with golden edges (84 edges)
+  const edgeSet=new Set();
+  const sortedPairs=[];
+  for(let i=0;i<24;i++){
+    const dists=[];
+    for(let j=0;j<24;j++){
+      if(i===j) continue;
+      dists.push({j,d:kleinVerts[i].distanceTo(kleinVerts[j])});
+    }
+    dists.sort((a,b)=>a.d-b.d);
+    // Connect to 7 nearest (each vertex has degree 7 in {3,7})
+    for(let k=0;k<Math.min(7,dists.length);k++){
+      const key=Math.min(i,dists[k].j)+'-'+Math.max(i,dists[k].j);
+      if(!edgeSet.has(key)){
+        edgeSet.add(key);
+        sortedPairs.push([i,dists[k].j]);
+      }
+    }
+  }
+
+  const edgeMat=new THREE.LineBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.35});
+  sortedPairs.forEach(([a,b])=>{
+    const pts=[kleinVerts[a],kleinVerts[b]];
+    genusGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),edgeMat));
+  });
+}
+
+// ═══════════════════════════════════════════════
+// HYPERBOLOID MODEL — {7,3} on negative-curvature surface
+// ═══════════════════════════════════════════════
+function buildHyperboloid(){
+  while(hyperGroup.children.length) hyperGroup.remove(hyperGroup.children[0]);
+
+  // Hyperboloid sheet mesh
+  const hSegs=80, rSegs=60;
+  const positions=[], indices=[], uvs=[];
+  const maxR=2.2;
+  for(let i=0;i<=rSegs;i++){
+    const rr=maxR*i/rSegs;
+    for(let j=0;j<=hSegs;j++){
+      const theta=TAU*j/hSegs;
+      const x=rr*Math.cos(theta);
+      const z=rr*Math.sin(theta);
+      const y=0.15*(rr*rr); // paraboloid approximation of hyperboloid
+      positions.push(x,y,z);
+      uvs.push(j/hSegs,i/rSegs);
+    }
+  }
+  for(let i=0;i<rSegs;i++){
+    for(let j=0;j<hSegs;j++){
+      const a=i*(hSegs+1)+j, b=a+hSegs+1;
+      indices.push(a,b,a+1, b,b+1,a+1);
+    }
+  }
+  const hGeo=new THREE.BufferGeometry();
+  hGeo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  hGeo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  hGeo.setIndex(indices);
+  hGeo.computeVertexNormals();
+
+  const surfMat=new THREE.MeshStandardMaterial({
+    color:0x1a0a2e, transparent:true, opacity:0.2, side:THREE.DoubleSide,
+    metalness:0.2, roughness:0.7, depthWrite:false
+  });
+  hyperGroup.add(new THREE.Mesh(hGeo,surfMat));
+
+  // Project heptagons onto hyperboloid
+  function hyperHept(cx,cz,r,depth,pa){
+    if(depth>Math.min(maxDepth,4)||r<0.02) return;
+    const pts=[];
+    for(let i=0;i<7;i++){
+      const a=TAU*i/7+pa;
+      const px=cx+Math.cos(a)*r, pz=cz+Math.sin(a)*r;
+      const py=0.15*(px*px+pz*pz)+0.01;
+      pts.push(new THREE.Vector3(px,py,pz));
+    }
+    // Edges
+    const hue=(depth*50+180)%360;
+    const eMat=new THREE.LineBasicMaterial({color:new THREE.Color(`hsl(${hue},60%,55%)`),transparent:true,opacity:0.5-depth*0.08});
+    for(let i=0;i<7;i++){
+      const geo=new THREE.BufferGeometry().setFromPoints([pts[i],pts[(i+1)%7]]);
+      hyperGroup.add(new THREE.Line(geo,eMat));
+    }
+    // Vertices
+    if(depth<3){
+      const vMat=new THREE.MeshBasicMaterial({color:new THREE.Color(`hsl(${hue},50%,65%)`),transparent:true,opacity:0.7});
+      pts.forEach(p=>{
+        const d=new THREE.Mesh(new THREE.SphereGeometry(0.018,6,6),vMat);
+        d.position.copy(p);
+        hyperGroup.add(d);
+      });
+    }
+    // Recurse
+    if(depth<Math.min(maxDepth,4)){
+      for(let i=0;i<7;i++){
+        const a=TAU*i/7+TAU/14+pa;
+        const shrink=0.50-depth*0.02;
+        const ncx=cx+Math.cos(a)*r*1.35, ncz=cz+Math.sin(a)*r*1.35;
+        if(Math.sqrt(ncx*ncx+ncz*ncz)+r*shrink<maxR*0.92){
+          hyperHept(ncx,ncz,r*shrink,depth+1,a+PI);
+        }
+      }
+    }
+  }
+  hyperHept(0,0,maxR*0.25,0,0);
+
+  // Lights for hyperboloid
+  const al=new THREE.AmbientLight(0x222244,0.5);
+  al.userData.hyperLight=true;
+  hyperGroup.add(al);
+  const dl=new THREE.DirectionalLight(0xbf7fff,0.6);
+  dl.position.set(2,4,3);
+  dl.userData.hyperLight=true;
+  hyperGroup.add(dl);
+}
+
+// ═══════════════════════════════════════════════
+// FANO PLANE — PG(2,2): 7 points, 7 lines
+// PSL(2,7) ≅ GL(3,F₂) acts on this
+// ═══════════════════════════════════════════════
+function buildFano(){
+  while(fanoGroup.children.length) fanoGroup.remove(fanoGroup.children[0]);
+
+  // 7 points: 6 on hexagon + 1 center, lifted into 3D
+  const fanoR=1.2, fanoY=1.0;
+  const fanoPoints=[];
+  fanoPoints.push(new THREE.Vector3(0,fanoY,0)); // center
+  for(let i=0;i<6;i++){
+    const a=TAU*i/6;
+    fanoPoints.push(new THREE.Vector3(Math.cos(a)*fanoR,fanoY,Math.sin(a)*fanoR));
+  }
+
+  // 7 lines (each through 3 collinear points)
+  const fanoLines=[
+    [0,1,2],[0,3,4],[0,5,6], // lines through center
+    [1,3,5],[2,4,6],         // alternating hexagon triples
+    [1,4,6],[2,3,5]           // remaining triples (one is the "circle" line)
+  ];
+  // Note: in standard Fano labeling with center=0, hex=1-6
+
+  // Point spheres
+  const fanoColors=[0xc8a96e,0xff3355,0x00e5ff,0xbf7fff,0x44ff88,0xff6b35,0x88aaff];
+  fanoPoints.forEach((p,i)=>{
+    const sphere=new THREE.Mesh(
+      new THREE.SphereGeometry(0.06,16,16),
+      new THREE.MeshBasicMaterial({color:fanoColors[i],transparent:true,opacity:0.9})
+    );
+    sphere.position.copy(p);
+    fanoGroup.add(sphere);
+
+    // Glow halo — larger transparent sphere for bloom pickup
+    const glow=new THREE.Mesh(
+      new THREE.SphereGeometry(0.14,12,12),
+      new THREE.MeshBasicMaterial({color:fanoColors[i],transparent:true,opacity:0.1,depthWrite:false})
+    );
+    glow.position.copy(p);
+    fanoGroup.add(glow);
+  });
+
+  // Line tubes
+  fanoLines.forEach((line,li)=>{
+    const curve=new THREE.CatmullRomCurve3(line.map(i=>fanoPoints[i]));
+    const tubeGeo=new THREE.TubeGeometry(curve,20,0.012,8,false);
+    const hue=(li*51)%360;
+    const tubeMat=new THREE.MeshBasicMaterial({
+      color:new THREE.Color(`hsl(${hue},55%,50%)`),
+      transparent:true, opacity:0.45
+    });
+    fanoGroup.add(new THREE.Mesh(tubeGeo,tubeMat));
+  });
+
+  // Central label ring showing "PG(2,2)"
+  const labelRing=new THREE.Mesh(
+    new THREE.TorusGeometry(fanoR*0.5,0.005,8,64),
+    new THREE.MeshBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.1})
+  );
+  labelRing.position.y=fanoY;
+  labelRing.rotation.x=PI/2;
+  fanoGroup.add(labelRing);
+
+  // Incidence indicator lines (faint connections showing duality)
+  const incMat=new THREE.LineBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.06});
+  for(let i=0;i<7;i++){
+    for(let j=i+1;j<7;j++){
+      const pts=[fanoPoints[i],fanoPoints[j]];
+      fanoGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),incMat));
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SYMMETRY ORBITS — 168 elements of PSL(2,7)
+// Cayley graph with generators of order 2, 3, 7
+// ═══════════════════════════════════════════════
+function buildSymmetry(){
+  while(symmetryGroup.children.length) symmetryGroup.remove(symmetryGroup.children[0]);
+
+  // Arrange 168 elements on a sphere (Fibonacci spiral for even distribution)
+  const N=168;
+  const symR=2.0;
+  const nodes=[];
+  const goldenAngle=PI*(3-Math.sqrt(5));
+
+  for(let i=0;i<N;i++){
+    const y=1-2*i/(N-1);
+    const radius=Math.sqrt(1-y*y);
+    const theta=goldenAngle*i;
+    const pos=new THREE.Vector3(
+      Math.cos(theta)*radius*symR,
+      y*symR,
+      Math.sin(theta)*radius*symR
+    );
+    nodes.push(pos);
+
+    // Color by coset: 168 = 24*7 = 56*3 = 84*2
+    const coset7=Math.floor(i/24); // 7 cosets of size 24
+    const hue=(coset7*51+15)%360;
+    const dot=new THREE.Mesh(
+      new THREE.SphereGeometry(0.025,6,6),
+      new THREE.MeshBasicMaterial({
+        color:new THREE.Color(`hsl(${hue},55%,50%)`),
+        transparent:true, opacity:0.7
+      })
+    );
+    dot.position.copy(pos);
+    symmetryGroup.add(dot);
+  }
+
+  // Generator connections: order-7 element connects i → (i+24)%168
+  const gen7Mat=new THREE.LineBasicMaterial({color:0xbf7fff,transparent:true,opacity:0.08});
+  for(let i=0;i<N;i++){
+    const j=(i+24)%N;
+    symmetryGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([nodes[i],nodes[j]]),gen7Mat
+    ));
+  }
+
+  // Order-3 generator: connects i → (i+56)%168
+  const gen3Mat=new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:0.06});
+  for(let i=0;i<N;i++){
+    const j=(i+56)%N;
+    symmetryGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([nodes[i],nodes[j]]),gen3Mat
+    ));
+  }
+
+  // Order-2 generator: connects i → (i+84)%168
+  const gen2Mat=new THREE.LineBasicMaterial({color:0xff6b35,transparent:true,opacity:0.06});
+  for(let i=0;i<N;i++){
+    const j=(i+84)%N;
+    symmetryGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([nodes[i],nodes[j]]),gen2Mat
+    ));
+  }
+
+  // Central sphere showing |G|=168
+  const coreSphere=new THREE.Mesh(
+    new THREE.SphereGeometry(0.08,16,16),
+    new THREE.MeshBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.3})
+  );
+  symmetryGroup.add(coreSphere);
+}
+
+// ═══════════════════════════════════════════════
+// σ-CHAIN CONNECTION — 28 → 56 → 120 → 168
+// Showing how Klein's 168 emerges from sigma
+// ═══════════════════════════════════════════════
+function buildSigma(){
+  while(sigmaGroup.children.length) sigmaGroup.remove(sigmaGroup.children[0]);
+
+  const sigmaValues=[
+    {n:28, sigma:56, label:'σ(28)=56', color:0x44ff88, y:0},
+    {n:56, sigma:120, label:'σ(56)=120', color:0x00e5ff, y:0.8},
+    {n:120, sigma:360, label:'σ(120)=360', color:0xbf7fff, y:1.6},
+    {n:60, sigma:168, label:'σ(60)=168', color:0xc8a96e, y:2.4}
+  ];
+
+  sigmaValues.forEach((sv,si)=>{
+    const ringR=1.0+si*0.3;
+    // Place n points on a ring
+    for(let i=0;i<Math.min(sv.n,60);i++){
+      const a=TAU*i/Math.min(sv.n,60);
+      const dot=new THREE.Mesh(
+        new THREE.SphereGeometry(0.02,6,6),
+        new THREE.MeshBasicMaterial({color:sv.color,transparent:true,opacity:0.6})
+      );
+      dot.position.set(Math.cos(a)*ringR, sv.y, Math.sin(a)*ringR);
+      sigmaGroup.add(dot);
+    }
+
+    // Ring circle
+    const ringGeo=new THREE.RingGeometry(ringR-0.005,ringR+0.005,128);
+    const ringMesh=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({
+      color:sv.color,transparent:true,opacity:0.12,side:THREE.DoubleSide
+    }));
+    ringMesh.position.y=sv.y;
+    ringMesh.rotation.x=-PI/2;
+    sigmaGroup.add(ringMesh);
+
+    // Vertical connecting lines to next level
+    if(si<sigmaValues.length-1){
+      const nextY=sigmaValues[si+1].y;
+      for(let i=0;i<6;i++){
+        const a=TAU*i/6;
+        const pts=[
+          new THREE.Vector3(Math.cos(a)*ringR*0.3, sv.y, Math.sin(a)*ringR*0.3),
+          new THREE.Vector3(Math.cos(a+0.2)*(ringR+0.3)*0.3, nextY, Math.sin(a+0.2)*(ringR+0.3)*0.3)
+        ];
+        sigmaGroup.add(new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(pts),
+          new THREE.LineBasicMaterial({color:sv.color,transparent:true,opacity:0.1})
+        ));
+      }
+    }
+  });
+
+  // Final: 168 dots on outer shell — the Klein quartic order
+  const kleinMat=new THREE.MeshBasicMaterial({color:0xc8a96e,transparent:true,opacity:0.4});
+  for(let i=0;i<168;i++){
+    const phi=Math.acos(1-2*(i+0.5)/168);
+    const theta=PI*(1+Math.sqrt(5))*i;
+    const rr=2.5;
+    const dot=new THREE.Mesh(new THREE.SphereGeometry(0.015,4,4),kleinMat);
+    dot.position.set(
+      rr*Math.sin(phi)*Math.cos(theta),
+      rr*Math.cos(phi)+1.2,
+      rr*Math.sin(phi)*Math.sin(theta)
+    );
+    sigmaGroup.add(dot);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// MODE INFO & NARRATION DATA
+// ═══════════════════════════════════════════════
+const modes=[
+  {name:'POINCARÉ DISK',group:poincareGroup,build:buildPoincare,
+   narr:'The Hyperbolic Plane',sub:'24 heptagons tile the Poincaré disk model\nof hyperbolic geometry in the {7,3} pattern.',
+   eq:'κ = −1 · Gauss–Bonnet: ∫K dA = 2π(2−2g)',
+   hud:'Poincaré disk model · {7,3} · 3 heptagons per vertex'},
+  {name:'GENUS-3',group:genusGroup,build:buildGenus3,
+   narr:'The 3-Holed Torus',sub:'The Klein quartic is a genus-3 Riemann surface —\nthe surface with three handles.',
+   eq:'χ = 2−2g = −4 · g = 3 · 84(g−1) = 168',
+   hud:'Genus-3 surface · 24 vertices · 84 edges on surface'},
+  {name:'HYPERBOLOID',group:hyperGroup,build:buildHyperboloid,
+   narr:'Negative Curvature',sub:'The same {7,3} tiling lifted onto a hyperboloid —\nmaking the negative curvature physically visible.',
+   eq:'x²+y²−z² = −1 · Minkowski metric',
+   hud:'Hyperboloid model · saddle geometry · curvature visible'},
+  {name:'FANO PLANE',group:fanoGroup,build:buildFano,
+   narr:'The Finite Projective Plane',sub:'PSL(2,7) ≅ GL(3,F₂) acts on the Fano plane PG(2,2).\n7 points, 7 lines, 3 points per line.',
+   eq:'PG(2,F₂) · |GL(3,F₂)| = 168',
+   hud:'Fano plane PG(2,2) · 7 points · 7 lines · incidence structure'},
+  {name:'DUAL {3,7}',group:dualGroup,build:buildDual,
+   narr:'The Dual Tiling',sub:'Exchanging vertices and faces: 56 triangles\nmeeting 7 at each of 24 vertices.',
+   eq:'{3,7} dual · 56 faces · 84 edges · 24 vertices',
+   hud:'Dual {3,7} tiling · triangles meeting 7 per vertex'},
+  {name:'SYMMETRY',group:symmetryGroup,build:buildSymmetry,
+   narr:'168 Symmetries',sub:'The 168 elements of PSL(2,7) arranged as\na Cayley graph with generators of order 2, 3, 7.',
+   eq:'|PSL(2,7)| = 168 = 2³·3·7',
+   hud:'PSL(2,7) Cayley graph · generators: order 2,3,7'},
+  {name:'σ-CHAIN',group:sigmaGroup,build:buildSigma,
+   narr:'The Sigma Emergence',sub:'168 = σ(60): the Klein quartic order emerges\nfrom the divisor-sum function σ.',
+   eq:'28 →σ 56 →σ 120 · σ(60) = 168',
+   hud:'Sigma chain · 168 = σ(60) · divisor-sum connection'},
+  {name:'ALL LAYERS',group:null,build:null,
+   narr:'Everything At Once',sub:'All representations of the Klein quartic\noverlaid in a single view.',
+   eq:'Poincaré ⊕ Genus-3 ⊕ Hyperboloid ⊕ Fano ⊕ Dual ⊕ Symmetry ⊕ σ',
+   hud:'Combined view · all layers · toggle individually'}
+];
+
+// ═══════════════════════════════════════════════
+// VIEWPOINTS
+// ═══════════════════════════════════════════════
+const viewpoints=[
+  {name:'OVERVIEW',   pos:[0,3,4],     target:[0,0,0],     key:'1'},
+  {name:'FACE ON',    pos:[0,5,0.01],  target:[0,0,0],     key:'2'},
+  {name:'EDGE ON',    pos:[4.5,0.1,0], target:[0,0,0],     key:'3'},
+  {name:'INSIDE',     pos:[0,0.1,0.1], target:[1.5,0,0],   key:'4'},
+  {name:'GENUS-3',    pos:[2,2,3],     target:[0,0.5,0],   key:'5'},
+  {name:'THROUGH',    pos:[0.5,0.3,0], target:[0,0.5,0],   key:'6'},
+  {name:'FANO',       pos:[0,1.5,2.5], target:[0,1,0],     key:'7'},
+  {name:'HYPER',      pos:[2,1.5,3],   target:[0,0.3,0],   key:'8'},
+  {name:'DEEP ZOOM',  pos:[0,1.2,0.3], target:[0,0,0],     key:'9'},
+  {name:'COSMIC',     pos:[0,8,8],     target:[0,0,0],     key:'0'}
+];
+
+// ═══════════════════════════════════════════════
+// MODE SWITCHING
+// ═══════════════════════════════════════════════
+function setMode(idx){
+  currentMode=idx;
+  const allGroups=[poincareGroup,genusGroup,hyperGroup,fanoGroup,dualGroup,symmetryGroup,sigmaGroup,boundaryGroup];
+
+  if(idx===7){ // ALL mode
+    allGroups.forEach(g=>g.visible=true);
+    modes.forEach(m=>{if(m.build&&!m.group.children.length) m.build();});
+  } else {
+    allGroups.forEach(g=>g.visible=false);
+    const m=modes[idx];
+    if(m.group){
+      m.group.visible=true;
+      if(!m.group.children.length) m.build();
+    }
+    if(idx===0||idx===4) boundaryGroup.visible=vis.boundary; // Poincaré & dual need boundary
+  }
+
+  // Update mode buttons
+  document.querySelectorAll('.mbtn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+
+  // Show narration
+  showNarration(modes[idx].narr, modes[idx].sub, modes[idx].eq);
+
+  // Update HUD
+  updateHUD();
+}
+
+function showNarration(title,text,eq){
+  const el=document.getElementById('narr');
+  document.getElementById('nt').textContent=title;
+  document.getElementById('nx').textContent=text;
+  document.getElementById('ne').textContent=eq||'';
+  el.classList.add('show');
+  clearTimeout(narrTimer);
+  narrTimer=setTimeout(()=>el.classList.remove('show'),3500);
+}
+
+function updateHUD(){
+  const m=modes[currentMode];
+  document.getElementById('htl').innerHTML=`<div class="hi hi-gold">${m.name}</div><div class="hi hi-dim">${m.hud}</div>`;
+  document.getElementById('htr').innerHTML=`<div class="hi hi-cyan">|PSL(2,7)| = 168</div><div class="hi hi-dim">84(g−1) · Hurwitz bound</div>`;
+  const stats=currentMode===0?`<div class="hi hi-dim">heptagons: ~${heptCount}</div><div class="hi hi-dim">depth: ${maxDepth}</div>`:'';
+  document.getElementById('hbl').innerHTML=stats;
+  document.getElementById('hbr').innerHTML=`<div class="hi hi-dim">drag · scroll · pinch</div><div class="hi hi-dim">1-0 viewpoints · M modes</div>`;
+}
+
+function updateVisibility(){
+  if(currentMode===0||currentMode===4) boundaryGroup.visible=vis.boundary;
+  // Rebuild current mode to apply fill/edge/vert toggles
+  const m=modes[currentMode];
+  if(m.build&&currentMode<5){
+    while(m.group.children.length) m.group.remove(m.group.children[0]);
+    m.build();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// VIEWPOINT FLIGHTS
+// ═══════════════════════════════════════════════
+function flyTo(idx){
+  const vp=viewpoints[idx];
+  vpTarget=new THREE.Vector3(...vp.pos);
+  vpLookTarget=new THREE.Vector3(...vp.target);
+  vpLerp=0;
+  document.querySelectorAll('.vpbtn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+}
+
+let sweepIdx=-1, sweepTimer=null;
+function startSweep(){
+  sweepIdx=0;
+  flyTo(0);
+  clearInterval(sweepTimer);
+  sweepTimer=setInterval(()=>{
+    sweepIdx=(sweepIdx+1)%viewpoints.length;
+    flyTo(sweepIdx);
+    if(sweepIdx===viewpoints.length-1){clearInterval(sweepTimer);sweepTimer=null;}
+  },3500);
+}
+
+// ═══════════════════════════════════════════════
+// BUILD UI — Mode buttons, viewpoint buttons
+// ═══════════════════════════════════════════════
+const mscroll=document.getElementById('mscroll');
+modes.forEach((m,i)=>{
+  const btn=document.createElement('button');
+  btn.className='mbtn'+(i===0?' active':'');
+  btn.textContent=m.name;
+  btn.onclick=()=>setMode(i);
+  mscroll.appendChild(btn);
+});
+
+const vpscroll=document.getElementById('vpscroll');
+viewpoints.forEach((vp,i)=>{
+  const btn=document.createElement('button');
+  btn.className='vpbtn';
+  btn.innerHTML=`${vp.name} <span class="kbd">${vp.key}</span>`;
+  btn.onclick=()=>flyTo(i);
+  vpscroll.appendChild(btn);
+});
+
+// ═══════════════════════════════════════════════
+// SLIDER & KEYBOARD CONTROLS
+// ═══════════════════════════════════════════════
+document.getElementById('sl-depth').oninput=function(){
+  maxDepth=+this.value;
+  document.getElementById('sv-depth').textContent=maxDepth;
+  const m=modes[currentMode];
+  if(m.build&&(currentMode===0||currentMode===2||currentMode===4)){
+    while(m.group.children.length) m.group.remove(m.group.children[0]);
+    m.build();
+  }
+};
+document.getElementById('sl-bloom').oninput=function(){
+  const v=+this.value/100;
+  bloom.strength=v;
+  document.getElementById('sv-bloom').textContent=v.toFixed(2);
+};
+document.getElementById('sl-speed').oninput=function(){
+  speed=+this.value/100;
+  document.getElementById('sv-speed').textContent=speed.toFixed(1);
+};
+document.getElementById('sl-opacity').oninput=function(){
+  opacity=+this.value/100;
+  document.getElementById('sv-opacity').textContent=this.value;
+  depthMats.forEach((m,d)=>{m.opacity=(0.25-d*0.025)*opacity;});
+  edgeMats.forEach((m,d)=>{m.opacity=(0.5-d*0.05)*opacity;});
+};
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT') return;
+  const k=e.key;
+  // Viewpoints 1-9,0
+  if(k>='1'&&k<='9') flyTo(+k-1);
+  if(k==='0') flyTo(9);
+  // Mode cycle
+  if(k==='m'||k==='M') setMode((currentMode+1)%modes.length);
+  // Toggles
+  if(k==='e'||k==='E'){vis.edges=!vis.edges;document.getElementById('t-edges').classList.toggle('on',vis.edges);updateVisibility();}
+  if(k==='f'||k==='F'){vis.fills=!vis.fills;document.getElementById('t-fills').classList.toggle('on',vis.fills);updateVisibility();}
+  if(k==='v'||k==='V'){vis.verts=!vis.verts;document.getElementById('t-verts').classList.toggle('on',vis.verts);updateVisibility();}
+  if(k==='b'||k==='B'){vis.boundary=!vis.boundary;document.getElementById('t-boundary').classList.toggle('on',vis.boundary);updateVisibility();}
+  // Depth
+  if(k==='d'||k==='D'){
+    maxDepth=Math.min(7,maxDepth+1);
+    document.getElementById('sl-depth').value=maxDepth;
+    document.getElementById('sv-depth').textContent=maxDepth;
+    const m=modes[currentMode];
+    if(m.build&&(currentMode===0||currentMode===2||currentMode===4)){
+      while(m.group.children.length) m.group.remove(m.group.children[0]);
+      m.build();
+    }
+  }
+  // Sweep tour
+  if(k===' '){e.preventDefault();startSweep();}
+});
+
+// ═══════════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════════
+let lastTime=performance.now(), frameCount=0, fpsAccum=0;
+
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=(now-lastTime)/1000;
+  lastTime=now;
+  t+=dt*speed;
+
+  // FPS counter
+  frameCount++;
+  fpsAccum+=dt;
+  if(fpsAccum>=0.5){
+    document.getElementById('fps').textContent=Math.round(frameCount/fpsAccum)+' fps';
+    frameCount=0;
+    fpsAccum=0;
+  }
+
+  // Smooth camera flight
+  if(vpTarget){
+    vpLerp=Math.min(1,vpLerp+dt*1.2);
+    const ease=1-Math.pow(1-vpLerp,3); // cubic ease-out
+    camera.position.lerp(vpTarget,ease*0.08);
+    controls.target.lerp(vpLookTarget,ease*0.08);
+    if(vpLerp>=1) vpTarget=null;
+  }
+
+  controls.update();
+
+  // Gentle rotation for modes that benefit from it
+  if(currentMode===1) genusGroup.rotation.y+=dt*speed*0.15;
+  if(currentMode===3) fanoGroup.rotation.y+=dt*speed*0.2;
+  if(currentMode===5) symmetryGroup.rotation.y+=dt*speed*0.1;
+  if(currentMode===6) sigmaGroup.rotation.y+=dt*speed*0.12;
+
+  // Poincaré disk: subtle shimmer on edge opacity
+  if(currentMode===0){
+    edgeMats.forEach((m,d)=>{
+      m.opacity=(0.5-d*0.05)*opacity*(0.85+0.15*Math.sin(t*2+d*0.5));
+    });
+  }
+
+  composer.render();
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+buildPoincare();
+setMode(0);
+flyTo(0);
+animate(performance.now());
+
+</script>
+</body>
+</html>

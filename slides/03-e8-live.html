@@ -1,0 +1,33 @@
+<!--
+  SLIDE 3 — LIVE E8 VISUALIZER
+  ═════════════════════════════
+  Duration: ~3 minutes
+  Purpose:  First live demo. Let the audience SEE E8.
+
+  This slide is an iframe embedding the E8 visualizer (visualizers/e8.html).
+  The iframe loads lazily — only when this slide becomes active (see engine.js).
+
+  DEMO INSTRUCTIONS:
+  1. Let it auto-rotate for a moment — "Each dot is one of those 240 roots"
+  2. Toggle SHELLS on — show the 6 concentric rings
+  3. Toggle D8 (gold) — "These are the 112 integer-type roots"
+  4. Toggle S+ (cyan) — "These are the 128 spinor-type roots"
+  5. "Notice they separate into different shells — that's the key discovery"
+
+  TECHNICAL NOTE:
+  The E8 page uses Three.js with EffectComposer (bloom post-processing).
+  It generates the 240 roots mathematically from the E8 root system
+  definition and projects them using Coxeter eigenplanes.
+-->
+<section class="slide"
+  data-notes="~3 min. DEMO TIME. Let it auto-rotate. 'Each dot is one of those 240 roots, projected from 8D.' Toggle shells to show 6 rings. Toggle D8 (gold) vs S+ (cyan) to show type separation. 'Notice they separate perfectly — that's the key discovery.' Let people absorb the visual.">
+
+  <div class="iframe-wrap">
+    <iframe data-src="visualizers/e8.html" loading="lazy"></iframe>
+    <div class="iframe-overlay">
+      <div class="io-title">LIVE &nbsp;·&nbsp; E8 Root System</div>
+      <p>240 roots projected from 8 dimensions → 2D using Coxeter eigenplanes.<br>
+      <span style="color:var(--text-dim)">Interact: drag to rotate · toggle shells · toggle D8/S+ types</span></p>
+    </div>
+  </div>
+</section>

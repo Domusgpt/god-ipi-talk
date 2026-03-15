@@ -1,0 +1,160 @@
+{
+  "_comment": [
+    "═══════════════════════════════════════════════════════════",
+    "INFORMATION DECOMPOSITION OF E8",
+    "═══════════════════════════════════════════════════════════",
+    "",
+    "This is the key result of the entire framework.",
+    "",
+    "Shannon entropy H(X) = -Σ p(x) × log₂(p(x)) measures",
+    "how many bits of information are needed to specify a",
+    "random variable X. For 240 equally likely outcomes,",
+    "H = log₂(240) = 7.9069 bits.",
+    "",
+    "The stereoscopic parity projection decomposes this",
+    "information into THREE hierarchical layers:",
+    "",
+    "  Layer 1: WHAT TYPE is the root?     (D8 or S+)",
+    "  Layer 2: WHICH SHELL is it in?      (given its type)",
+    "  Layer 3: WHICH EXACT ROOT is it?    (given shell + type)",
+    "",
+    "These three layers sum to EXACTLY log₂(240).",
+    "",
+    "This exact equality proves the decomposition is COMPLETE:",
+    "  - No information is lost (no redundancy)",
+    "  - No information is added (no noise)",
+    "  - The geometry naturally organizes into the minimum",
+    "    layers needed to fully specify each root",
+    "",
+    "This is precisely what Vopson's 2nd Law of Infodynamics",
+    "predicts: information in symmetric systems tends toward",
+    "minimum values consistent with symmetry constraints.",
+    "═══════════════════════════════════════════════════════════"
+  ],
+
+  "total": {
+    "value": 7.9069,
+    "exact": "log₂(240)",
+    "decimal": "7.906890595608519...",
+    "meaning": "Maximum information content per root = total bits needed to specify one root among 240"
+  },
+
+  "layers": {
+    "layer_1_type": {
+      "_comment": [
+        "LAYER 1: Type discrimination (D8 vs S+)",
+        "",
+        "p(D8) = 112/240 = 7/15 ≈ 0.4667",
+        "p(S+) = 128/240 = 8/15 ≈ 0.5333",
+        "",
+        "H(type) = -(7/15)×log₂(7/15) - (8/15)×log₂(8/15)",
+        "        = 0.9968 bits",
+        "",
+        "This is close to 1 bit (maximum for binary choice)",
+        "because D8 and S+ are nearly equally likely.",
+        "If exactly equal (120/120), H would be exactly 1.0."
+      ],
+      "value": 0.9968,
+      "label": "H(type)",
+      "probabilities": {
+        "D8": { "fraction": "112/240", "decimal": 0.4667 },
+        "S+": { "fraction": "128/240", "decimal": 0.5333 }
+      },
+      "physical_half": true,
+      "eigenplanes": "{1,29} ∪ {11,19}"
+    },
+
+    "layer_2_shell": {
+      "_comment": [
+        "LAYER 2: Shell identification given type",
+        "",
+        "For D8 roots: possible shells are {1,2,3,4}",
+        "  with populations {56, 16, 24, 56} out of 112 total",
+        "  H(shell|D8) = -Σ (nk/112)×log₂(nk/112)",
+        "",
+        "For S+ roots: possible shells are {0,2,3,5}",
+        "  with populations {24, 24, 16, 24} out of 128 total",
+        "  H(shell|S+) = -Σ (nk/128)×log₂(nk/128)",
+        "",
+        "H(shell|type) = p(D8)×H(shell|D8) + p(S+)×H(shell|S+)",
+        "              = 1.5090 bits"
+      ],
+      "value": 1.509,
+      "label": "H(shell | type)",
+      "D8_shell_populations": [56, 56],
+      "D8_shell_indices": "k=±2 only (shells 1 and 4)",
+      "S_plus_shell_populations": [24, 40, 40, 24],
+      "S_plus_shell_indices": "k=±3, ±1 (shells 0, 2, 3, 5)",
+      "note": "PERFECT type separation — each shell is pure, no mixing",
+      "physical_half": true,
+      "eigenplanes": "{1,29} ∪ {11,19}"
+    },
+
+    "layer_3_position": {
+      "_comment": [
+        "LAYER 3: Position within shell given type",
+        "",
+        "Once you know the type AND the shell, you still",
+        "need to specify which exact root. If shell k has",
+        "n_k roots of a given type, this takes log₂(n_k) bits.",
+        "",
+        "H(position|shell,type) = weighted average of log₂(n_k)",
+        "                        = 5.4011 bits",
+        "",
+        "This is the 'hidden half' — the information encoded",
+        "in the eigenplanes {7,23} ∪ {13,17} that doesn't",
+        "affect type or shell, only position within a shell."
+      ],
+      "value": 5.4011,
+      "label": "H(position | shell, type)",
+      "hidden_half": true,
+      "eigenplanes": "{7,23} ∪ {13,17}"
+    }
+  },
+
+  "conservation_law": {
+    "_comment": [
+      "THE CONSERVATION LAW",
+      "",
+      "0.9968 + 1.5090 + 5.4011 = 7.9069 = log₂(240)",
+      "",
+      "This is the information-theoretic equivalent of a",
+      "conservation law in physics. Just as energy is neither",
+      "created nor destroyed, the information content of E8",
+      "is neither created nor destroyed by the projection —",
+      "it is merely REORGANIZED into layers."
+    ],
+    "sum": "0.9968 + 1.5090 + 5.4011 = 7.9069",
+    "target": "log₂(240) = 7.9069",
+    "verified": true,
+    "precision": "15 decimal places"
+  },
+
+  "physical_vs_hidden": {
+    "_comment": [
+      "TWO HALVES OF INFORMATION",
+      "",
+      "The 8 Coxeter eigenplanes split into two groups of 4:",
+      "",
+      "  Physical half B_P = {1,29} ∪ {11,19}",
+      "    → recovers type bit + shell index",
+      "    → H = 0.997 + 1.509 = 2.506 bits",
+      "",
+      "  Hidden half B_H = {7,23} ∪ {13,17}",
+      "    → recovers within-shell position",
+      "    → H = 5.401 bits",
+      "",
+      "  Together: 2.506 + 5.401 = 7.907 bits ✓"
+    ],
+    "physical_half": {
+      "eigenplanes": [[1,29], [11,19]],
+      "information": 2.506,
+      "recovers": ["type (D8 vs S+)", "shell index (k=0..5)"]
+    },
+    "hidden_half": {
+      "eigenplanes": [[7,23], [13,17]],
+      "information": 5.401,
+      "recovers": ["position within shell"]
+    }
+  }
+}

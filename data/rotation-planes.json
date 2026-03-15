@@ -1,0 +1,80 @@
+{
+  "_comment": [
+    "═══════════════════════════════════════════════════════════",
+    "ROTATION PLANES IN 8 DIMENSIONS",
+    "═══════════════════════════════════════════════════════════",
+    "",
+    "In 3D, rotation happens AROUND AN AXIS.",
+    "In 8D, rotation happens IN A PLANE.",
+    "",
+    "There are C(8,2) = 28 independent rotation planes,",
+    "one for each pair of coordinate axes: (e₁,e₂), (e₁,e₃), ...",
+    "",
+    "These 28 planes form C(28,2) = 378 pairs. Each pair is",
+    "either orthogonal (their axes are disjoint) or non-orthogonal",
+    "(they share at least one axis).",
+    "",
+    "The split is 210 : 168 = 5 : 4",
+    "",
+    "168 = |PSL(2,7)| — the symmetry group of the Klein quartic,",
+    "the most symmetric Riemann surface at genus 3.",
+    "",
+    "This connects 8D rotation geometry directly to one of",
+    "the most beautiful objects in algebraic geometry.",
+    "═══════════════════════════════════════════════════════════"
+  ],
+
+  "planes": {
+    "dimension": 8,
+    "count": 28,
+    "formula": "C(8,2) = 8! / (2! × 6!) = 28",
+    "note": "28 is the 2nd perfect number: σ(28) = 56 = 2 × 28"
+  },
+
+  "pairs": {
+    "total": 378,
+    "formula": "C(28,2) = 28! / (2! × 26!) = 378",
+
+    "orthogonal": {
+      "count": 210,
+      "factorization": "2 × 3 × 5 × 7",
+      "meaning": "Planes with no shared coordinate axes (disjoint)",
+      "note": "Product of the first 4 primes (2,3,5,7)"
+    },
+
+    "non_orthogonal": {
+      "count": 168,
+      "factorization": "2³ × 3 × 7",
+      "meaning": "Planes sharing at least one coordinate axis",
+      "group_theory": "|PSL(2,7)| — the projective special linear group over F₇",
+      "geometry": "Automorphism group of the Klein quartic"
+    },
+
+    "ratio": {
+      "non_orthogonal_to_orthogonal": "168/210 = 4/5",
+      "music": "4:5 = a major third (one of the most consonant intervals)",
+      "formula": "(q₀ - 1) / q₀ where q₀ = 5 (outer twin prime)"
+    }
+  },
+
+  "klein_quartic": {
+    "_comment": [
+      "THE KLEIN QUARTIC",
+      "",
+      "Discovered by Felix Klein in 1879. A genus-3 Riemann surface",
+      "(a 'donut with 3 holes') that achieves the maximum number of",
+      "symmetries for its genus.",
+      "",
+      "The Hurwitz bound: a genus-g surface has at most 84(g-1)",
+      "automorphisms. For g=3: 84 × 2 = 168. The Klein quartic",
+      "achieves this bound exactly.",
+      "",
+      "It can be tiled by 24 regular heptagons in the hyperbolic",
+      "plane — the {7,3} tiling."
+    ],
+    "genus": 3,
+    "automorphisms": 168,
+    "hurwitz_bound": "84(g-1) = 84 × 2 = 168",
+    "tiling": "24 regular heptagons ({7,3} tiling)"
+  }
+}

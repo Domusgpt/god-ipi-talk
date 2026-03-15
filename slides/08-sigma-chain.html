@@ -1,0 +1,72 @@
+<!--
+  SLIDE 8 — THE σ-CHAIN
+  ══════════════════════
+  Duration: ~2.5 minutes
+  Purpose:  Show how a simple arithmetic function connects all of E8.
+
+  THE DIVISOR SUM FUNCTION σ(n):
+  ──────────────────────────────
+  σ(n) = the sum of ALL positive divisors of n (including 1 and n itself).
+
+  Examples:
+    σ(6)  = 1 + 2 + 3 + 6       = 12
+    σ(28) = 1 + 2 + 4 + 7 + 14 + 28 = 56
+    σ(56) = 1 + 2 + 4 + 7 + 8 + 14 + 28 + 56 = 120
+    σ(120)= 1+2+3+4+5+6+8+10+12+15+20+24+30+40+60+120 = 360
+
+  THE CHAIN AND WHAT IT MEANS:
+  ───────────────────────────
+  28:  C(8,2) = "8 choose 2" = number of independent rotation planes in 8D.
+       Also the 2nd perfect number (a number equal to the sum of its
+       proper divisors: 1+2+4+7+14 = 28). The first is 6.
+
+  56:  σ(28) = 56. This is the population of the D8 (integer-type)
+       shells in E8. There are exactly 56 D8 roots per paired shell.
+
+  120: σ(56) = 120. This equals:
+       - 5! (5 factorial) = the number of vertices of the 600-cell
+       - The sum of E8's Coxeter exponents: 1+7+11+13+17+19+23+29 = 120
+       - The dimension of the Craig lattice at Level 2
+
+  360: σ(120) = 360. This equals:
+       - |A₆| = 6!/2 = the order of the alternating group on 6 elements
+       - There are exactly 6 shells, and A₆ governs their permutation symmetry
+
+  The chain doesn't just produce nice numbers — each step connects
+  a different mathematical structure that appears in E8.
+
+  ANIMATION: Steps appear one by one (see animations.js).
+-->
+<section class="slide"
+  data-notes="~2.5 min. Steps appear one by one. 'The divisor sum function σ — you just add up all divisors of a number — walks through every important structure in E8. Start with 28 rotation planes. σ(28)=56, the D8 population. σ(56)=120, the sum of E8 exponents. σ(120)=360, the order of A₆, which governs 6 shells. These aren't cherry-picked — they ARE E8.'">
+
+  <h2>The σ-Chain</h2>
+  <p class="desc">The divisor sum function walks through every structure in E8.</p>
+
+  <div class="gap-lg"></div>
+
+  <div class="sigma-chain" id="sigma-chain">
+    <div class="sigma-step">
+      <span class="sigma-num">28</span>
+      <span class="sigma-desc">rotation planes in 8D &nbsp;(2nd perfect number)</span>
+    </div>
+    <div class="sigma-arrow">↓ σ</div>
+    <div class="sigma-step">
+      <span class="sigma-num">56</span>
+      <span class="sigma-desc">D8 shell population &nbsp;(integer roots)</span>
+    </div>
+    <div class="sigma-arrow">↓ σ</div>
+    <div class="sigma-step">
+      <span class="sigma-num">120</span>
+      <span class="sigma-desc">Σ(E8 exponents) = dim(Level 2) = |600-cell|</span>
+    </div>
+    <div class="sigma-arrow">↓ σ</div>
+    <div class="sigma-step">
+      <span class="sigma-num">360</span>
+      <span class="sigma-desc">|A₆| — alternating group on 6 elements → 6 shells</span>
+    </div>
+  </div>
+
+  <div class="gap-lg"></div>
+  <p class="desc" style="color:var(--gold)">These aren't cherry-picked — they <em>are</em> E8.</p>
+</section>

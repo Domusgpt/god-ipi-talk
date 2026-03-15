@@ -1,0 +1,232 @@
+/*
+ * ══════════════════════════════════════════════════════════════
+ * LAYOUT.CSS — Slide System & Structural Layout
+ * ══════════════════════════════════════════════════════════════
+ *
+ * HOW THE SLIDE SYSTEM WORKS
+ * ──────────────────────────
+ * Each slide is a <section class="slide"> positioned absolutely
+ * to fill the entire viewport. Only the one with class "active"
+ * is visible (opacity: 1). Navigation swaps the active class
+ * with a CSS opacity transition — no JavaScript animation needed.
+ *
+ * This approach was chosen over scroll-based or transform-based
+ * slides because:
+ *   1. iframes with Three.js visualizers need stable positioning
+ *   2. Opacity transitions don't trigger layout recalculation
+ *   3. Each slide can have its own z-index stacking context
+ *
+ * IFRAME EMBEDDING
+ * ────────────────
+ * Slides 3, 9, 10, 11, and 12 embed live visualizers via iframe.
+ * The iframes use data-src instead of src — they only load when
+ * their slide becomes active (see engine.js). This prevents 5
+ * WebGL contexts from fighting for GPU resources simultaneously.
+ */
+
+/* ── The Deck Container ── */
+.deck {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ── Individual Slide ── */
+.slide {
+  position: absolute;
+  inset: 0;                    /* top:0 right:0 bottom:0 left:0 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration) ease;
+  padding: 4vh 6vw;
+  overflow: hidden;
+}
+
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Allow interaction with embedded visualizers */
+.slide.active iframe {
+  pointer-events: auto;
+}
+
+/* ── Split Layout (side-by-side columns) ──
+ * Used in slides 4 and 7 where we compare two ideas.
+ * Stacks vertically on mobile.
+ */
+.split {
+  display: flex;
+  gap: clamp(1.5rem, 3vw, 4rem);
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 60em;
+  flex-wrap: wrap;
+}
+
+.split-half {
+  flex: 1;
+  min-width: 16rem;
+}
+
+/* ── Iframe Wrapper ──
+ * For slides that are entirely a live visualizer.
+ * The iframe fills the viewport; an overlay gradient
+ * at the bottom provides context text.
+ */
+.iframe-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.iframe-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.iframe-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.2rem 2rem;
+  background: linear-gradient(transparent, rgba(5, 5, 8, 0.92) 40%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.iframe-overlay p {
+  text-align: left;
+  font-size: var(--fs-body-sm);
+  color: var(--text);
+  max-width: none;
+  line-height: 1.5;
+}
+
+.iframe-overlay .io-title {
+  font-family: 'Space Mono', monospace;
+  font-size: var(--fs-body-sm);
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+}
+
+/* ── HUD Elements ──
+ * Always visible regardless of slide. Fixed position
+ * with pointer-events: none so they don't interfere
+ * with visualizer interaction.
+ */
+.hud-timer {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  z-index: 200;
+  pointer-events: none;
+}
+
+.hud-counter {
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  z-index: 200;
+  pointer-events: none;
+}
+
+.hud-keys {
+  position: fixed;
+  bottom: 12px;
+  left: 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  color: rgba(122, 112, 96, 0.5);
+  z-index: 200;
+  pointer-events: none;
+}
+
+/* ── Presenter Notes Bar ──
+ * Hidden by default. Press N to slide it up from the bottom.
+ * Only visible to the presenter — YouTube viewers see the
+ * screen share which clips at the window boundary.
+ */
+.notes-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.82rem;
+  padding: 0.7rem 1.5rem;
+  z-index: 300;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+}
+
+.notes-bar.show {
+  transform: translateY(0);
+}
+
+/* ── Title Slide Background Animation ──
+ * A subtle radial gradient that pulses slowly.
+ * Evokes the "looking into deep space" feeling.
+ */
+.title-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.title-bg::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140vmax;
+  height: 140vmax;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(200, 169, 110, 0.07) 0%,
+    rgba(0, 229, 255, 0.03) 30%,
+    transparent 60%
+  );
+  animation: pulse 8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  0%   { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 1;   transform: translate(-50%, -50%) scale(1.15); }
+}
+
+.title-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Responsive Adjustments ── */
+@media (max-width: 700px) {
+  .split {
+    flex-direction: column;
+  }
+
+  .slide {
+    padding: 3vh 4vw;
+  }
+}

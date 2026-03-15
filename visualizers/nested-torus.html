@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Xylatic Total Structure — Interior View · G.O.D. Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;1,200&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c8a96e;--gold-g:rgba(200,169,110,0.35);--orange:#ff6b35;--cyan:#00e5ff;--purple:#bf7fff;--white:#e8f0f4;--deep:#020205;--panel:rgba(3,3,8,0.94);--border:rgba(200,169,110,0.15);--text:#e8f0f4;--text-dim:#7a7a8a;--mono:'Space Mono',monospace;--serif:'Crimson Pro',serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--text);font-family:var(--serif);touch-action:none}
+canvas#cv{position:fixed;top:0;left:0;width:100%;height:100%;display:block;cursor:grab;z-index:0}
+canvas#cv:active{cursor:grabbing}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;gap:0.5rem;padding:0 1rem;height:40px;background:rgba(2,2,5,0.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(200,169,110,0.08)}
+.topbar a{color:var(--text-dim);text-decoration:none;font:600 0.6rem var(--mono);letter-spacing:0.1em}
+.topbar a:hover{color:var(--gold)}
+.topbar-title{font:400 0.5rem var(--mono);color:var(--gold);letter-spacing:0.18em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-spacer{flex:1}
+.topbar-info{font:400 0.42rem var(--mono);color:var(--text-dim)}
+
+.hud{position:fixed;z-index:100;pointer-events:none}
+.hud-tl{top:50px;left:12px}
+.hud-tr{top:50px;right:12px}
+.hud-bl{bottom:70px;left:12px}
+.hud-br{bottom:70px;right:12px}
+.hud-item{font:400 0.5rem var(--mono);opacity:0.75;margin-bottom:2px;text-shadow:0 0 10px currentColor}
+.hud-gold{color:var(--gold)}.hud-cyan{color:var(--cyan)}.hud-purple{color:var(--purple)}.hud-orange{color:var(--orange)}.hud-dim{color:var(--text-dim);opacity:0.45}
+
+.drawer-handle{position:fixed;bottom:0;left:0;right:0;z-index:300;display:flex;flex-direction:column;align-items:center}
+.drawer-tab{display:flex;align-items:center;gap:0.5rem;width:100%;padding:8px 12px;background:var(--panel);border-top:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.grip{width:36px;height:4px;border-radius:2px;background:rgba(200,169,110,0.25)}
+.mode-scroll{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mode-scroll::-webkit-scrollbar{display:none}
+.mode-btn{font:400 0.45rem var(--mono);letter-spacing:0.06em;padding:5px 9px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0}
+.mode-btn.active{background:rgba(200,169,110,0.15);border-color:var(--gold);color:var(--gold);box-shadow:0 0 12px rgba(200,169,110,0.12)}
+
+.drawer-body{width:100%;max-height:0;overflow:hidden;overflow-y:auto;background:var(--panel);transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);-webkit-overflow-scrolling:touch}
+.drawer-body.open{max-height:55vh}
+.drawer-body::-webkit-scrollbar{width:3px}
+.drawer-body::-webkit-scrollbar-thumb{background:rgba(200,169,110,0.15)}
+.drawer-inner{padding:12px 16px 24px}
+
+.acc{border-bottom:1px solid rgba(200,169,110,0.06)}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:9px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.acc-head h3{font:400 0.5rem var(--mono);letter-spacing:0.2em;color:var(--gold);text-transform:uppercase}
+.acc-arrow{font-size:0.6rem;color:var(--text-dim);transition:transform 0.2s}
+.acc.open .acc-arrow{transform:rotate(180deg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+.acc.open .acc-body{max-height:800px}
+.acc-content{padding:0 0 12px}
+
+.math-box{font:400 0.55rem var(--mono);color:var(--gold);line-height:1.9;padding:8px 10px;background:rgba(200,169,110,0.04);border:1px solid rgba(200,169,110,0.12);border-radius:3px;margin-bottom:6px}
+.ctrl-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ctrl-lbl{font:400 0.45rem var(--mono);color:var(--text-dim);min-width:55px;letter-spacing:0.08em}
+input[type=range]{flex:1;accent-color:var(--gold);height:18px}
+.ctrl-val{font:400 0.45rem var(--mono);color:var(--gold);min-width:24px;text-align:right}
+.toggle-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.tog-btn{font:400 0.42rem var(--mono);padding:4px 7px;border:1px solid var(--border);background:transparent;color:var(--text-dim);border-radius:3px;cursor:pointer;transition:all 0.15s}
+.tog-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(200,169,110,0.1)}
+.tog-btn.l0{border-color:rgba(200,169,110,0.3)}.tog-btn.l0.active{color:var(--gold);background:rgba(200,169,110,0.12);border-color:var(--gold)}
+.tog-btn.l1{border-color:rgba(0,229,255,0.2)}.tog-btn.l1.active{color:var(--cyan);background:rgba(0,229,255,0.08);border-color:var(--cyan)}
+.tog-btn.l2{border-color:rgba(191,127,255,0.2)}.tog-btn.l2.active{color:var(--purple);background:rgba(191,127,255,0.08);border-color:var(--purple)}
+.legend-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-txt{font:300 0.6rem var(--serif);color:var(--text-dim)}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px}
+.metric{padding:5px 6px;background:rgba(255,255,255,0.015);border:1px solid var(--border);border-radius:3px}
+.metric-label{font:400 0.38rem var(--mono);letter-spacing:0.1em;color:var(--text-dim);margin-bottom:1px}
+.metric-value{font:300 0.75rem var(--serif);color:var(--text)}
+
+@media(min-width:1025px){
+  .drawer-handle{display:none}
+  .desktop-sb{display:block!important;position:fixed;top:40px;right:0;bottom:0;width:340px;z-index:150;overflow-y:auto;background:var(--panel);border-left:1px solid var(--border);padding:12px 16px}
+  .desktop-sb.collapsed{transform:translateX(100%)}
+  .desktop-sb::-webkit-scrollbar{width:3px}
+  .desk-toggle{display:flex!important}
+}
+@media(max-width:1024px){.desktop-sb{display:none!important}.desk-toggle{display:none!important}}
+.desk-toggle{position:fixed;top:48px;right:8px;z-index:200;font:400 0.5rem var(--mono);padding:4px 8px;border:1px solid var(--border);background:rgba(2,2,5,0.8);color:var(--text-dim);border-radius:3px;cursor:pointer;display:none}
+.desk-toggle:hover{color:var(--gold);border-color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="../index.html">&larr; G.O.D.</a>
+  <span class="topbar-title">XYLATIC TOTAL STRUCTURE</span>
+  <span class="topbar-spacer"></span>
+  <span class="topbar-info" id="t-info">E8 &sub; &Lambda;24 &sub; A142</span>
+</div>
+<canvas id="cv"></canvas>
+
+<div class="hud hud-tl">
+  <div class="hud-item hud-gold" id="hud-mode">NESTED · EXTERIOR</div>
+  <div class="hud-item hud-dim" id="hud-sub">3 tori · 24-cell void</div>
+</div>
+<div class="hud hud-tr">
+  <div class="hud-item hud-dim" id="hud-level"></div>
+</div>
+<div class="hud hud-bl">
+  <div class="hud-item hud-gold" id="hud-eq">T&sup2; = S&sup1; &times; S&sup1;</div>
+</div>
+<div class="hud hud-br">
+  <div class="hud-item hud-dim" id="hud-cam"></div>
+</div>
+
+<button class="desk-toggle" id="dt">PANEL &#9656;</button>
+<div class="desktop-sb collapsed" id="dsb"></div>
+
+<div class="drawer-handle">
+  <div class="drawer-tab" id="dtab">
+    <div style="display:flex;gap:4px;align-items:center;width:100%;overflow-x:auto;scrollbar-width:none">
+      <div class="grip"></div>
+      <div class="mode-scroll" id="mbtns">
+        <button class="mode-btn active" data-mode="nested">NESTED</button>
+        <button class="mode-btn" data-mode="interior">INTERIOR</button>
+        <button class="mode-btn" data-mode="void24">24-CELL</button>
+        <button class="mode-btn" data-mode="mobius">MOBIUS</button>
+        <button class="mode-btn" data-mode="layers">LAYERS</button>
+        <button class="mode-btn" data-mode="fiber">FIBER</button>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-body" id="dbody"><div class="drawer-inner" id="dcont"></div></div>
+</div>
+
+<script>
+const canvas=document.getElementById('cv'),ctx=canvas.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);
+const PHI=(1+Math.sqrt(5))/2,TAU=Math.PI*2;
+
+// === STATE ===
+let mode='nested',time=0,zoom=1,rotX=0.25,rotY=0,camZ=0; // camZ: 0=exterior, negative=inside
+let spd=5,psize=4,opac=90,wireOpac=30;
+let showL0=true,showL1=true,showL2=true,showVoid=true,showLinks=true;
+let autoRotate=true,breathe=true,pulsePhase=0;
+let viewSlot=0; // 0..24 for 25 positions (1 void center + 24 cell positions)
+
+// === POINTER ===
+let pointers=new Map(),lastDist=0,dragId=null;
+canvas.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)dragId=e.pointerId;canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId))return;const prev=pointers.get(e.pointerId);
+  if(pointers.size===1&&e.pointerId===dragId){rotY+=(e.clientX-prev.x)*0.004;rotX+=(e.clientY-prev.y)*0.004;}
+  else if(pointers.size===2){const pts=[...pointers.values()];const d=Math.sqrt((pts[0].x-pts[1].x)**2+(pts[0].y-pts[1].y)**2);if(lastDist>0)zoom=Math.max(0.2,Math.min(5,zoom*(d/lastDist)));lastDist=d;}
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+});
+canvas.addEventListener('pointerup',e=>{pointers.delete(e.pointerId);if(pointers.size<2)lastDist=0;if(e.pointerId===dragId)dragId=null});
+canvas.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);if(pointers.size<2)lastDist=0});
+canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(0.2,Math.min(5,zoom*(1-e.deltaY*0.001)))},{passive:false});
+
+// === GLOW RENDERING ===
+function glow(x,y,r,g,b,a,sz,gm){
+  gm=gm||3;if(a<0.02||sz<0.3)return;
+  const gr=ctx.createRadialGradient(x,y,0,x,y,sz*gm);
+  gr.addColorStop(0,`rgba(${r},${g},${b},${a*0.4})`);gr.addColorStop(0.4,`rgba(${r},${g},${b},${a*0.12})`);gr.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(x,y,sz*gm,0,TAU);ctx.fillStyle=gr;ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,sz,0,TAU);ctx.fillStyle=`rgba(${r},${g},${b},${a})`;ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,sz*0.3,0,TAU);
+  ctx.fillStyle=`rgba(${Math.min(255,r+100)},${Math.min(255,g+100)},${Math.min(255,b+100)},${a*0.85})`;ctx.fill();
+}
+
+// === 3D MATH ===
+function rotateYAxis(p,a){const c=Math.cos(a),s=Math.sin(a);return{x:p.x*c+p.z*s,y:p.y,z:-p.x*s+p.z*c}}
+function rotateXAxis(p,a){const c=Math.cos(a),s=Math.sin(a);return{x:p.x,y:p.y*c-p.z*s,z:p.y*s+p.z*c}}
+function project(p,W,H,fov){
+  fov=fov||500;
+  const z=p.z+fov+camZ;if(z<10)return null;
+  const sc=fov/z*zoom;
+  return{x:W/2+p.x*sc,y:H/2-p.y*sc,d:z,sc};
+}
+
+// === BUILD 24-CELL (D4 roots) ===
+function build24Cell(){
+  const verts=[];
+  // 8 vertices: permutations of (+-1, 0, 0, 0)
+  for(let i=0;i<4;i++)for(const s of[1,-1]){const v=[0,0,0,0];v[i]=s;verts.push(v);}
+  // 16 vertices: (+-0.5, +-0.5, +-0.5, +-0.5)
+  for(let m=0;m<16;m++){const v=[];for(let b=0;b<4;b++)v.push((m>>b&1)?-0.5:0.5);verts.push(v);}
+  // Edges: connect vertices at distance 1
+  const edges=[];
+  for(let i=0;i<24;i++)for(let j=i+1;j<24;j++){
+    let d2=0;for(let k=0;k<4;k++)d2+=(verts[i][k]-verts[j][k])**2;
+    if(Math.abs(d2-1)<0.01)edges.push([i,j]);
+  }
+  return{verts,edges};
+}
+const cell24=build24Cell();
+
+// === BUILD E8 ROOTS (240) ===
+function popcount(n){let c=0;while(n){c+=n&1;n>>=1}return c}
+const e8roots=[],e8types=[];
+for(let i=0;i<8;i++)for(let j=i+1;j<8;j++)for(const si of[1,-1])for(const sj of[1,-1]){const v=new Float32Array(8);v[i]=si;v[j]=sj;e8roots.push(v);e8types.push('D8');}
+for(let m=0;m<256;m++)if(popcount(m)%2===0){const v=new Float32Array(8);for(let b=0;b<8;b++)v[b]=(m>>b&1)?-0.5:0.5;e8roots.push(v);e8types.push('S+');}
+
+// Project E8 root to 4D via cross-parity Coxeter
+function projectE8(r){
+  const s=Math.sqrt(1+PHI*PHI);
+  return[(r[0]+PHI*r[1])/s,(r[2]+PHI*r[3])/s,(r[4]+PHI*r[5])/s,(r[6]+PHI*r[7])/s];
+}
+
+// === TORUS GEOMETRY ===
+function torusPoint(R,r,theta,phi){
+  return{x:(R+r*Math.cos(phi))*Math.cos(theta),y:(R+r*Math.cos(phi))*Math.sin(theta),z:r*Math.sin(phi)};
+}
+
+function drawTorusWire(R,r,segs,tubes,cr,cg,cb,alpha,W,H,t){
+  for(let i=0;i<segs;i+=Math.max(1,Math.floor(segs/16))){
+    const th=(i/segs)*TAU;
+    ctx.beginPath();
+    for(let j=0;j<=tubes;j++){
+      const ph=(j/tubes)*TAU;
+      let p=torusPoint(R,r,th+t*0.3,ph);
+      p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+      const pp=project(p,W,H);if(!pp){if(j===0)continue;break;}
+      j===0?ctx.moveTo(pp.x,pp.y):ctx.lineTo(pp.x,pp.y);
+    }
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},${alpha})`;ctx.lineWidth=0.5;ctx.stroke();
+  }
+  // Longitudinal
+  for(let j=0;j<tubes;j+=Math.max(1,Math.floor(tubes/12))){
+    const ph=(j/tubes)*TAU;
+    ctx.beginPath();
+    for(let i=0;i<=segs;i++){
+      const th=(i/segs)*TAU;
+      let p=torusPoint(R,r,th+t*0.3,ph);
+      p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+      const pp=project(p,W,H);if(!pp){if(i===0)continue;break;}
+      i===0?ctx.moveTo(pp.x,pp.y):ctx.lineTo(pp.x,pp.y);
+    }
+    ctx.strokeStyle=`rgba(${cr},${cg},${cb},${alpha*0.6})`;ctx.lineWidth=0.4;ctx.stroke();
+  }
+}
+
+// === LEVEL DEFINITIONS ===
+const LEVELS=[
+  {name:'E8',twins:'(3,5)',dim:8,R:80,r:30,rgb:[200,169,110],K:240,h:30,segs:48,tubes:20,
+   shells:[{k:-3,p:24},{k:-2,p:56},{k:-1,p:40},{k:1,p:40},{k:2,p:56},{k:3,p:24}]},
+  {name:'Leech',twins:'(5,7)',dim:24,R:160,r:55,rgb:[0,229,255],K:196560,h:35,segs:60,tubes:28,
+   crt:{p:5,q:7}},
+  {name:'Craig',twins:'(11,13)',dim:120,R:260,r:90,rgb:[191,127,255],K:'?',h:143,segs:72,tubes:36,
+   crt:{p:11,q:13}},
+];
+
+// === E8 SHELL DATA: [24,56,40,40,56,24] with type separation ===
+const E8_SHELLS=[
+  {k:-3,pop:24,type:'S+',rgb:[255,107,53]},  // Spinor outer-
+  {k:-2,pop:56,type:'D8',rgb:[200,169,110]},  // Integer mid-
+  {k:-1,pop:40,type:'S+',rgb:[255,107,53]},  // Spinor inner-
+  {k:+1,pop:40,type:'S+',rgb:[255,107,53]},  // Spinor inner+
+  {k:+2,pop:56,type:'D8',rgb:[200,169,110]},  // Integer mid+
+  {k:+3,pop:24,type:'S+',rgb:[255,107,53]},  // Spinor outer+
+];
+const DELTA=Math.sqrt(5)/10; // Shell quantum δ = √5/10
+
+// Build Leech units for CRT mapping (Z/35Z)*
+const leechUnits=[];
+for(let m=1;m<35;m++){let a=m,b=35;while(b){[a,b]=[b,a%b]}if(a===1)leechUnits.push(m);}
+// Build Craig units (Z/143Z)*
+const craigUnits=[];
+for(let m=1;m<143;m++){let a=m,b=143;while(b){[a,b]=[b,a%b]}if(a===1)craigUnits.push(m);}
+
+// === DRAW: NESTED EXTERIOR ===
+function drawNested(W,H){
+  const t=time*spd*0.00015;
+  const pulse=breathe?0.03*Math.sin(time*0.008):0;
+
+  // Draw from outside in (Craig → Leech → E8)
+  for(let li=2;li>=0;li--){
+    const L=LEVELS[li];
+    const show=[showL0,showL1,showL2][li];if(!show)continue;
+    const R=(L.R+pulse*L.R)*zoom,r=(L.r+pulse*L.r*0.5)*zoom;
+    const wa=(wireOpac/100)*0.12;
+    const tOff=t*(li===0?1:li===1?0.7:0.4);
+
+    // Wireframe
+    drawTorusWire(R,r,L.segs,L.tubes,...L.rgb,wa,W,H,tOff);
+
+    // Points on torus — each level uses its own math
+    const pts=[];
+    if(li===0){
+      // E8: Map 240 roots via 6 shells, D8→major circle, S+→minor circle
+      for(const sh of E8_SHELLS){
+        const shellR=r*(1+sh.k*DELTA*0.5); // vary tube radius by shell
+        const N=Math.min(sh.pop,Math.ceil(sh.pop*0.75));
+        for(let i=0;i<N;i++){
+          const u=(i/N)*TAU;
+          let th,ph;
+          if(sh.type==='D8'){
+            // D8 integer roots track the major circle (theta)
+            th=u+tOff*0.3; ph=0.3*Math.sin(u*3.5+t);
+          }else{
+            // S+ spinor roots track the minor circle (phi)
+            const off=sh.k>0?(sh.k===3?TAU/6:0):(sh.k===-3?TAU*4/6:TAU/2);
+            th=off+Math.sin(u*5+t)*0.18; ph=u+tOff*0.15;
+          }
+          let p=torusPoint(R,shellR,th,ph);
+          p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+          const pp=project(p,W,H);if(!pp)continue;
+          pts.push({...pp,cr:sh.rgb[0],cg:sh.rgb[1],cb:sh.rgb[2],k:sh.k,type:sh.type});
+        }
+      }
+    }else if(li===1){
+      // Leech: CRT mapping (Z/35Z)* ≅ C4×C6 → T², mod5→θ, mod7→φ
+      for(let i=0;i<Math.min(leechUnits.length,96);i++){
+        const m=leechUnits[i%leechUnits.length];
+        const th=((m%5)/5)*TAU+tOff*0.3;
+        const ph=((m%7)/7)*TAU;
+        let p=torusPoint(R,r,th,ph);
+        p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+        const pp=project(p,W,H);if(!pp)continue;
+        pts.push({...pp,cr:0,cg:229,cb:255});
+      }
+    }else{
+      // Craig: CRT mapping (Z/143Z)* ≅ C10×C12 → T², mod11→θ, mod13→φ
+      for(let i=0;i<Math.min(craigUnits.length,60);i++){
+        const m=craigUnits[i%craigUnits.length];
+        const th=((m%11)/11)*TAU+tOff*0.3;
+        const ph=((m%13)/13)*TAU;
+        let p=torusPoint(R,r,th,ph);
+        p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+        const pp=project(p,W,H);if(!pp)continue;
+        pts.push({...pp,cr:191,cg:127,cb:255});
+      }
+    }
+
+    pts.sort((a,b)=>b.d-a.d);
+    for(const p of pts){
+      const alpha=(0.3+0.7*(500/p.d))*(opac/100);
+      const sz=psize*(0.5+0.5*(500/p.d))*(li===0?1:li===1?0.85:0.7);
+      glow(p.x,p.y,p.cr,p.cg,p.cb,alpha,sz,Math.abs(p.k||0)===3?4:3);
+    }
+  }
+
+  // 12-step spinor orbit on E8 torus (σ₂₉ half-turn at step 6)
+  if(showL0){
+    const orbitR=LEVELS[0].R*zoom*(1+pulse),orbitr=LEVELS[0].r*zoom;
+    const spinorStep=Math.floor(time*spd*0.001)%12;
+    for(let step=0;step<12;step++){
+      const angle=(step/12)*TAU+t*0.3;
+      const phi=angle*3; // winds 3× around minor circle
+      let p=torusPoint(orbitR,orbitr,angle,phi);
+      p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+      const pp=project(p,W,H);if(!pp)continue;
+      const isHalfTurn=(step===5); // σ₂₉ at step 6/12
+      const isActive=(step<=spinorStep);
+      const alpha=isActive?0.95:0.35;
+      if(isHalfTurn){
+        glow(pp.x,pp.y,0,229,255,alpha*(opac/100),psize*1.8,5);
+      }else{
+        glow(pp.x,pp.y,220,200,150,alpha*(opac/100),psize*(isActive?1.2:0.8),3);
+      }
+    }
+  }
+
+  // 24-cell at center (the void)
+  if(showVoid)draw24CellCore(W,H,t,25*zoom);
+
+  // Labels
+  ctx.fillStyle='rgba(200,169,110,0.6)';ctx.font='600 0.45rem "Space Mono"';
+  ctx.fillText('[24,56,40,40,56,24] · D8=gold S+=orange · 12-step orbit',14,H-50);
+  ctx.fillStyle='rgba(200,169,110,0.4)';ctx.font='400 0.4rem "Space Mono"';
+  ctx.fillText('σ₂₉ half-turn at step 6 (cyan) · 24-cell D4 void',14,H-36);
+}
+
+// === DRAW: INTERIOR VIEW ===
+function drawInterior(W,H){
+  const t=time*spd*0.00012;
+  const savedCamZ=camZ;
+  camZ=-350;
+  const pulse=breathe?0.02*Math.sin(time*0.006):0;
+  const scale=1.8;
+
+  // Render all 3 layers from inside — each with shell-accurate points
+  for(let li=0;li<3;li++){
+    const L=LEVELS[li];
+    const show=[showL0,showL1,showL2][li];if(!show)continue;
+    const R=L.R*scale*zoom,r=L.r*scale*zoom;
+    const [cr,cg,cb]=L.rgb;
+    const tOff=t*(1-li*0.2);
+
+    drawTorusWire(R,r,L.segs,L.tubes,cr,cg,cb,(wireOpac/100)*0.08,W,H,tOff);
+
+    if(li===0){
+      // Interior E8: show all 6 shells with D8/S+ type separation
+      for(const sh of E8_SHELLS){
+        const N=Math.ceil(sh.pop*0.5); // half density for interior
+        for(let i=0;i<N;i++){
+          const u=(i/N)*TAU;
+          let th,ph;
+          if(sh.type==='D8'){th=u+tOff*0.3;ph=0.25*Math.sin(u*3.5+t);}
+          else{const off=sh.k>0?0:Math.PI;th=off+Math.sin(u*5+t)*0.15;ph=u+tOff*0.15;}
+          let p=torusPoint(R,r*(1+sh.k*DELTA*0.4),th,ph);
+          p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+          const pp=project(p,W,H);if(!pp)continue;
+          const alpha=(0.25+0.75*(500/pp.d))*(opac/100);
+          glow(pp.x,pp.y,sh.rgb[0],sh.rgb[1],sh.rgb[2],alpha,psize*(0.4+0.6*(500/pp.d)),3);
+        }
+      }
+    }else if(li===1){
+      // Interior Leech: CRT C4×C6 torus
+      for(let i=0;i<Math.min(leechUnits.length,48);i++){
+        const m=leechUnits[i];
+        const th=((m%5)/5)*TAU+tOff*0.3;
+        const ph=((m%7)/7)*TAU;
+        let p=torusPoint(R,r,th,ph);
+        p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+        const pp=project(p,W,H);if(!pp)continue;
+        const alpha=(0.2+0.8*(500/pp.d))*(opac/100);
+        glow(pp.x,pp.y,cr,cg,cb,alpha,psize*(0.4+0.5*(500/pp.d)),3.5);
+      }
+    }else{
+      // Interior Craig: CRT C10×C12
+      for(let i=0;i<Math.min(craigUnits.length,36);i++){
+        const m=craigUnits[i];
+        const th=((m%11)/11)*TAU+tOff*0.3;
+        const ph=((m%13)/13)*TAU;
+        let p=torusPoint(R,r,th,ph);
+        p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+        const pp=project(p,W,H);if(!pp)continue;
+        const alpha=(0.2+0.8*(500/pp.d))*(opac/100);
+        glow(pp.x,pp.y,cr,cg,cb,alpha,psize*(0.3+0.5*(500/pp.d)),3);
+      }
+    }
+  }
+
+  // 24-cell void at center
+  if(showVoid)draw24CellCore(W,H,t,50*zoom);
+
+  // Inter-layer fibers with bridge equation annotation
+  if(showLinks){
+    for(let i=0;i<12;i++){
+      const th=(i/12)*TAU+t*0.2;
+      const pts=[];
+      for(let li=0;li<3;li++){
+        const L=LEVELS[li];
+        const R2=L.R*scale*zoom,r2=L.r*scale*zoom;
+        let p=torusPoint(R2,r2,th,0);
+        p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+        const pp=project(p,W,H);if(pp)pts.push({...pp,li});
+      }
+      if(pts.length>=2){
+        for(let j=0;j<pts.length-1;j++){
+          const [r1,g1,b1]=LEVELS[pts[j].li].rgb;
+          const [r2,g2,b2]=LEVELS[pts[j+1].li].rgb;
+          // Draw fiber as dotted gradient
+          const steps=8;
+          for(let s=0;s<steps;s++){
+            const f=s/steps;
+            const fx=pts[j].x*(1-f)+pts[j+1].x*f;
+            const fy=pts[j].y*(1-f)+pts[j+1].y*f;
+            const mr=Math.floor(r1*(1-f)+r2*f),mg=Math.floor(g1*(1-f)+g2*f),mb=Math.floor(b1*(1-f)+b2*f);
+            glow(fx,fy,mr,mg,mb,0.2*(opac/100),1.5,2);
+          }
+        }
+      }
+    }
+  }
+
+  // σ-chain annotation
+  ctx.fillStyle='rgba(200,169,110,0.55)';ctx.font='500 0.45rem "Space Mono"';
+  ctx.fillText('Interior: E8 → Leech → Craig surrounding',14,H-50);
+  ctx.fillStyle='rgba(0,229,255,0.5)';ctx.font='400 0.4rem "Space Mono"';
+  ctx.fillText('σ(28)=56=pop(±2) · σ(56)=120=dim(Craig) · σ(120)=360=|A₆|',14,H-36);
+
+  camZ=savedCamZ;
+}
+
+// === DRAW: 24-CELL (THE VOID) ===
+function draw24CellCore(W,H,t,scale){
+  const verts=cell24.verts.map(v=>{
+    // 4D→3D stereographic
+    const w=v[3],d4=1/(2-w*0.5);
+    return{x:v[0]*d4*scale,y:v[1]*d4*scale,z:v[2]*d4*scale};
+  });
+  // Rotate
+  const rv=verts.map(p=>{let q=rotateYAxis(p,rotY+t*0.5);q=rotateXAxis(q,rotX+t*0.2);return q});
+  const pv=rv.map(p=>project(p,W,H));
+
+  // Edges
+  for(const[i,j]of cell24.edges){
+    const a=pv[i],b=pv[j];if(!a||!b)continue;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+    ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=0.6;ctx.stroke();
+  }
+  // Vertices with level coloring: first 8 = D4 axes (gold), rest = half-integer (white)
+  for(let i=0;i<24;i++){
+    const p=pv[i];if(!p)continue;
+    const alpha=(0.4+0.6*(500/p.d))*(opac/100);
+    if(i<8) glow(p.x,p.y,255,220,150,alpha,psize*0.9,3);
+    else glow(p.x,p.y,220,220,240,alpha,psize*0.65,2.5);
+  }
+}
+
+function drawVoid24(W,H){
+  const t=time*spd*0.0002;
+  const slot=viewSlot%25;
+
+  // Main 24-cell
+  draw24CellCore(W,H,t,120*zoom);
+
+  // Show the 5 inscribed 24-cells in E8 (T-14: PG(2,F4) design)
+  // Each colored differently, the active one highlighted
+  const cellColors=[[200,169,110],[0,229,255],[191,127,255],[255,107,53],[120,220,120]];
+  const activeCell=Math.floor(slot/5); // 5 cells of 5 vertices each = 25 positions
+  for(let c=0;c<5;c++){
+    const phase=c*TAU/5+t*0.3;
+    const cellScale=(70+c*10)*zoom;
+    const [cr,cg,cb]=cellColors[c];
+    const isActive=(c===activeCell);
+    // Each inscribed 24-cell rotated differently
+    for(let v=0;v<cell24.verts.length;v++){
+      const vert=cell24.verts[v];
+      const d4=1/(2-vert[3]*0.4);
+      let p={x:vert[0]*d4*cellScale,y:vert[1]*d4*cellScale,z:vert[2]*d4*cellScale};
+      // Rotate each cell by its phase
+      const cp=Math.cos(phase),sp=Math.sin(phase);
+      const x2=p.x*cp-p.z*sp,z2=p.x*sp+p.z*cp;
+      p.x=x2;p.z=z2;
+      p=rotateYAxis(p,rotY+t*0.5);p=rotateXAxis(p,rotX+t*0.2);
+      const pp=project(p,W,H);if(!pp)continue;
+      const alpha=(isActive?0.85:0.25)*(opac/100)*(0.4+0.6*(500/pp.d));
+      glow(pp.x,pp.y,cr,cg,cb,alpha,psize*(isActive?1:0.5),isActive?3.5:2);
+    }
+    // Edges for active cell only
+    if(isActive){
+      for(const[i,j]of cell24.edges){
+        const v1=cell24.verts[i],v2=cell24.verts[j];
+        const pts=[v1,v2].map(vert=>{
+          const d4=1/(2-vert[3]*0.4);
+          let p={x:vert[0]*d4*cellScale,y:vert[1]*d4*cellScale,z:vert[2]*d4*cellScale};
+          const cp2=Math.cos(phase),sp2=Math.sin(phase);
+          const x3=p.x*cp2-p.z*sp2,z3=p.x*sp2+p.z*cp2;
+          p.x=x3;p.z=z3;
+          p=rotateYAxis(p,rotY+t*0.5);p=rotateXAxis(p,rotX+t*0.2);
+          return project(p,W,H);
+        });
+        if(pts[0]&&pts[1]){
+          ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[1].x,pts[1].y);
+          ctx.strokeStyle=`rgba(${cr},${cg},${cb},0.2)`;ctx.lineWidth=0.6;ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // At each vertex of active cell, show nested torus preview
+  if(slot>0){
+    const vIdx=(slot-1)%24;
+    const v=cell24.verts[vIdx];
+    const d4=1/(2-v[3]*0.4);
+    const cellScale=(70+activeCell*10)*zoom;
+    const phase=activeCell*TAU/5+t*0.3;
+    const cp=Math.cos(phase),sp=Math.sin(phase);
+    let offset={x:v[0]*d4*cellScale,y:v[1]*d4*cellScale,z:v[2]*d4*cellScale};
+    const ox=offset.x*cp-offset.z*sp,oz=offset.x*sp+offset.z*cp;
+    offset.x=ox;offset.z=oz;
+    // Mini torus triplet at vertex
+    const mR=20*zoom,mr=7*zoom;
+    for(let li=0;li<3;li++){
+      const [cr2,cg2,cb2]=LEVELS[li].rgb;
+      const sc=0.8+li*0.3;
+      for(let i=0;i<6;i++){
+        const th=(i/6)*TAU+t*(1.5-li*0.4);
+        let p=torusPoint(mR*sc,mr*sc,th,t*3);
+        p.x+=offset.x;p.y+=offset.y;p.z+=offset.z;
+        p=rotateYAxis(p,rotY+t*0.5);p=rotateXAxis(p,rotX+t*0.2);
+        const pp=project(p,W,H);if(!pp)continue;
+        glow(pp.x,pp.y,cr2,cg2,cb2,0.6*(opac/100),psize*0.6,2.5);
+      }
+    }
+  }
+
+  // Labels
+  ctx.fillStyle='rgba(200,169,110,0.7)';ctx.font='600 0.48rem "Space Mono"';
+  ctx.fillText(`T-14: 5 inscribed 24-cells · Position ${slot}/24 · Cell ${activeCell+1}/5`,14,H-50);
+  ctx.fillStyle='rgba(200,169,110,0.45)';ctx.font='400 0.4rem "Space Mono"';
+  ctx.fillText(`${slot===0?'VOID CENTER (origin)':'Vertex '+((slot-1)%24+1)+' of cell '+(activeCell+1)} · PG(2,F₄) design · overlap {0,6}`,14,H-36);
+}
+
+// === DRAW: MOBIUS SCALING ===
+function drawMobius(W,H){
+  const t=time*spd*0.00015;
+  const cx=W/2,cy=H/2;
+
+  // Three tori arranged along a Mobius-strip path
+  // Scaling ratios: L0→L1 = x3, L1→L2 = x5
+  // The strip twists 180 degrees over 3 levels
+  for(let li=0;li<3;li++){
+    const show=[showL0,showL1,showL2][li];if(!show)continue;
+    const L=LEVELS[li];
+    const [cr,cg,cb]=L.rgb;
+
+    // Position along Mobius strip
+    const mobiusAngle=(li/3)*TAU+t*0.3;
+    const mobiusTwist=(li/3)*Math.PI; // Half-twist over full loop
+    const mobiusR=150*zoom;
+    const offsetX=Math.cos(mobiusAngle)*mobiusR;
+    const offsetY=Math.sin(mobiusAngle)*mobiusR*0.4;
+    const offsetZ=Math.sin(mobiusAngle)*mobiusR*0.3;
+
+    // Torus scale decreases as we go inward (representing dimension compression)
+    const torusScale=(3-li)*0.3+0.4;
+    const R=L.R*torusScale*zoom*0.6,r=L.r*torusScale*zoom*0.6;
+
+    // Draw torus at this position
+    const numPts=30;
+    for(let i=0;i<numPts;i++){
+      const th=(i/numPts)*TAU,ph=(i%6)/6*TAU+t;
+      let p=torusPoint(R,r,th,ph);
+      // Apply Mobius twist
+      const ct=Math.cos(mobiusTwist),st=Math.sin(mobiusTwist);
+      const py2=p.y*ct-p.z*st,pz2=p.y*st+p.z*ct;
+      p.y=py2;p.z=pz2;
+      p.x+=offsetX;p.y+=offsetY;p.z+=offsetZ;
+      p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+      const pp=project(p,W,H);if(!pp)continue;
+      const alpha=(0.3+0.7*(500/pp.d))*(opac/100);
+      glow(pp.x,pp.y,cr,cg,cb,alpha,psize*(0.5+0.5*(500/pp.d)),3);
+    }
+
+    // Wireframe
+    for(let i=0;i<L.segs;i+=Math.max(1,Math.floor(L.segs/10))){
+      const th=(i/L.segs)*TAU;
+      ctx.beginPath();
+      for(let j=0;j<=L.tubes;j++){
+        const ph=(j/L.tubes)*TAU;
+        let p=torusPoint(R,r,th,ph);
+        const ct=Math.cos(mobiusTwist),st=Math.sin(mobiusTwist);
+        const py2=p.y*ct-p.z*st,pz2=p.y*st+p.z*ct;
+        p.y=py2;p.z=pz2;
+        p.x+=offsetX;p.y+=offsetY;p.z+=offsetZ;
+        p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+        const pp=project(p,W,H);if(!pp){if(j===0)continue;break;}
+        j===0?ctx.moveTo(pp.x,pp.y):ctx.lineTo(pp.x,pp.y);
+      }
+      ctx.strokeStyle=`rgba(${cr},${cg},${cb},${(wireOpac/100)*0.1})`;ctx.lineWidth=0.5;ctx.stroke();
+    }
+
+    // Level label
+    const lp={x:offsetX,y:offsetY-R*0.5-20,z:offsetZ};
+    const rlp=rotateXAxis(rotateYAxis(lp,rotY),rotX);
+    const plp=project(rlp,W,H);
+    if(plp){
+      ctx.fillStyle=`rgba(${cr},${cg},${cb},0.8)`;ctx.font='600 0.5rem "Space Mono"';
+      ctx.textAlign='center';ctx.fillText(`L${li}: ${L.name}`,plp.x,plp.y);ctx.textAlign='left';
+    }
+  }
+
+  // Scaling arrows between levels
+  if(showLinks){
+    for(let li=0;li<2;li++){
+      const a1=(li/3)*TAU+t*0.3,a2=((li+1)/3)*TAU+t*0.3;
+      const R=150*zoom;
+      const nArrows=8;
+      for(let i=0;i<nArrows;i++){
+        const frac=i/nArrows;
+        const angle=a1*(1-frac)+a2*frac;
+        let p={x:Math.cos(angle)*R,y:Math.sin(angle)*R*0.4,z:Math.sin(angle)*R*0.3};
+        p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+        const pp=project(p,W,H);if(!pp)continue;
+        const [r1,g1,b1]=LEVELS[li].rgb,[r2,g2,b2]=LEVELS[li+1].rgb;
+        const mr=Math.floor(r1*(1-frac)+r2*frac),mg=Math.floor(g1*(1-frac)+g2*frac),mb=Math.floor(b1*(1-frac)+b2*frac);
+        glow(pp.x,pp.y,mr,mg,mb,0.35*(opac/100),2,2);
+      }
+    }
+  }
+
+  // σ-chain visualization: σ(28)→56→120→360→1170
+  const chainVals=[{v:28,l:'C(8,2)',c:[200,169,110]},{v:56,l:'pop(±2)',c:[200,169,110]},{v:120,l:'dim(L2)',c:[191,127,255]},{v:360,l:'|A₆|',c:[0,229,255]},{v:168,l:'|PSL(2,7)|',c:[255,107,53]}];
+  const chainY=60;
+  for(let i=0;i<chainVals.length;i++){
+    const x=W*0.15+i*(W*0.18);
+    const [cr2,cg2,cb2]=chainVals[i].c;
+    glow(x,chainY,cr2,cg2,cb2,0.6*(opac/100),6,3);
+    ctx.fillStyle=`rgba(${cr2},${cg2},${cb2},0.8)`;ctx.font='700 0.5rem "Space Mono"';
+    ctx.textAlign='center';ctx.fillText(chainVals[i].v,x,chainY+18);
+    ctx.fillStyle=`rgba(${cr2},${cg2},${cb2},0.5)`;ctx.font='400 0.35rem "Space Mono"';
+    ctx.fillText(chainVals[i].l,x,chainY+28);
+    if(i<chainVals.length-1){
+      ctx.fillStyle='rgba(200,169,110,0.4)';ctx.font='400 0.4rem "Space Mono"';
+      ctx.fillText('σ→',x+W*0.09,chainY+2);
+    }
+  }
+  ctx.textAlign='left';
+
+  // Bottom labels
+  ctx.fillStyle='rgba(200,169,110,0.7)';ctx.font='600 0.48rem "Space Mono"';
+  ctx.fillText('L0 --x3--> L1 --x5--> L2 (orbit: 4 -> 12 -> 60)',14,H-50);
+  ctx.fillStyle='rgba(200,169,110,0.45)';ctx.font='400 0.4rem "Space Mono"';
+  ctx.fillText('D4 tiles: 2 -> 6 -> 30 · Gluing morphs: id -> spinor -> hexacode',14,H-36);
+}
+
+// === DRAW: LAYERS (toggle each level with connections) ===
+function drawLayers(W,H){
+  const t=time*spd*0.00015;
+
+  // All tori centered, different radii, with inter-layer fibers
+  for(let li=0;li<3;li++){
+    const show=[showL0,showL1,showL2][li];if(!show)continue;
+    const L=LEVELS[li];
+    const R=L.R*zoom,r=L.r*zoom;
+    const [cr,cg,cb]=L.rgb;
+    const tOff=t*(1-li*0.2);
+
+    drawTorusWire(R,r,L.segs,L.tubes,cr,cg,cb,(wireOpac/100)*0.1,W,H,tOff);
+
+    // Shell points
+    const N=li===0?80:li===1?60:40;
+    const pts=[];
+    for(let i=0;i<N;i++){
+      let th=(i/N)*TAU,ph;
+      if(li===0){const isD8=i<40;ph=isD8?0.3*Math.sin(th*3.5):(i-40)/40*TAU;}
+      else if(li===1){const m=(i*17+3)%35;th=((m%5)/5)*TAU+tOff*0.3;ph=((m%7)/7)*TAU;}
+      else{const m=(i*23+1)%143;th=((m%11)/11)*TAU+tOff*0.3;ph=((m%13)/13)*TAU;}
+      let p=torusPoint(R,r,th+tOff*0.3,ph);
+      p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+      const pp=project(p,W,H);if(!pp)continue;
+      pts.push({...pp,li,idx:i});
+      const alpha=(0.3+0.7*(500/pp.d))*(opac/100);
+      glow(pp.x,pp.y,cr,cg,cb,alpha,psize*(0.4+0.6*(500/pp.d)),3);
+    }
+
+    // Inter-layer connections
+    if(showLinks&&li<2){
+      const show2=[showL0,showL1,showL2][li+1];if(!show2)continue;
+      const L2=LEVELS[li+1];
+      const R2=L2.R*zoom,r2=L2.r*zoom;
+      const [cr2,cg2,cb2]=L2.rgb;
+      for(let i=0;i<6;i++){
+        const th=(i/6)*TAU+tOff*0.3;
+        let p1=torusPoint(R,r,th,0);p1=rotateYAxis(p1,rotY);p1=rotateXAxis(p1,rotX);
+        let p2=torusPoint(R2,r2,th,0);p2=rotateYAxis(p2,rotY);p2=rotateXAxis(p2,rotX);
+        const pp1=project(p1,W,H),pp2=project(p2,W,H);
+        if(!pp1||!pp2)continue;
+        const grad=ctx.createLinearGradient(pp1.x,pp1.y,pp2.x,pp2.y);
+        grad.addColorStop(0,`rgba(${cr},${cg},${cb},0.2)`);
+        grad.addColorStop(1,`rgba(${cr2},${cg2},${cb2},0.2)`);
+        ctx.beginPath();ctx.moveTo(pp1.x,pp1.y);ctx.lineTo(pp2.x,pp2.y);
+        ctx.strokeStyle=grad;ctx.lineWidth=1;ctx.stroke();
+      }
+    }
+  }
+
+  if(showVoid)draw24CellCore(W,H,t,25*zoom);
+}
+
+// === DRAW: FIBER BUNDLE ===
+function drawFiber(W,H){
+  const t=time*spd*0.0002;
+  const cx=W/2,cy=H/2;
+
+  // Show the fiber bundle: each point on E8 torus has a fiber connecting to Leech, which connects to Craig
+  // This visualizes the topological covering map
+  const fiberCount=24; // 24 fibers (matching 24-cell / dim of Leech)
+
+  for(let f=0;f<fiberCount;f++){
+    const baseAngle=(f/fiberCount)*TAU+t*0.2;
+    const fiberPts=[];
+
+    for(let li=0;li<3;li++){
+      const show=[showL0,showL1,showL2][li];if(!show)continue;
+      const L=LEVELS[li];
+      const R=L.R*zoom,r=L.r*zoom;
+      const [cr,cg,cb]=L.rgb;
+
+      // Base point on this level's torus
+      const ph=(f%L.tubes)/L.tubes*TAU+li*TAU/7; // offset per level
+      let p=torusPoint(R,r,baseAngle,ph);
+      p=rotateYAxis(p,rotY);p=rotateXAxis(p,rotX);
+      const pp=project(p,W,H);if(!pp)continue;
+
+      const alpha=(0.4+0.6*(500/pp.d))*(opac/100);
+      glow(pp.x,pp.y,cr,cg,cb,alpha,psize*(li===0?1.2:li===1?0.9:0.7),3);
+      fiberPts.push({...pp,li,cr,cg,cb});
+    }
+
+    // Connect fibers between levels
+    if(showLinks){
+      for(let i=0;i<fiberPts.length-1;i++){
+        const a=fiberPts[i],b=fiberPts[i+1];
+        const grad=ctx.createLinearGradient(a.x,a.y,b.x,b.y);
+        grad.addColorStop(0,`rgba(${a.cr},${a.cg},${a.cb},0.15)`);
+        grad.addColorStop(1,`rgba(${b.cr},${b.cg},${b.cb},0.15)`);
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=grad;ctx.lineWidth=0.7;ctx.stroke();
+      }
+    }
+  }
+
+  // Light wireframes for context
+  for(let li=0;li<3;li++){
+    const show=[showL0,showL1,showL2][li];if(!show)continue;
+    const L=LEVELS[li];
+    drawTorusWire(L.R*zoom,L.r*zoom,L.segs,L.tubes,...L.rgb,(wireOpac/100)*0.06,W,H,t*0.3);
+  }
+
+  if(showVoid)draw24CellCore(W,H,t,20*zoom);
+
+  ctx.fillStyle='rgba(200,169,110,0.65)';ctx.font='600 0.48rem "Space Mono"';
+  ctx.fillText('24 fibers: E8 -> Leech -> Craig covering map',14,H-50);
+  ctx.fillStyle='rgba(200,169,110,0.4)';ctx.font='400 0.42rem "Space Mono"';
+  ctx.fillText('Each fiber = one D4 direction through the tower',14,H-34);
+}
+
+// === MODE SWITCH ===
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  const hm=document.getElementById('hud-mode'),hs=document.getElementById('hud-sub'),he=document.getElementById('hud-eq');
+  const info={
+    nested:['NESTED · EXTERIOR','E8 inside Leech inside Craig','T² = S¹ x S¹ nested'],
+    interior:['INTERIOR VIEW','Looking outward from the void','Camera inside E8 torus'],
+    void24:['24-CELL · THE VOID','D4 root polytope at center','24 vertices · 96 edges'],
+    mobius:['MOBIUS SCALING','Half-twist between levels','x3 · x5 orbit scaling'],
+    layers:['LAYER DECOMPOSITION','Toggle individual tower levels','Inter-level fiber connections'],
+    fiber:['FIBER BUNDLE','24 covering fibers through tower','D4 directions map levels'],
+  };
+  const d=info[m]||['','',''];
+  if(hm)hm.textContent=d[0];if(hs)hs.textContent=d[1];if(he)he.textContent=d[2];
+
+  // Reset camera for interior mode
+  if(m==='interior')camZ=-350;else camZ=0;
+}
+
+// === DRAWER ===
+let drawerOpen=false;
+document.getElementById('dtab').addEventListener('click',e=>{if(e.target.closest('.mode-btn'))return;drawerOpen=!drawerOpen;document.getElementById('dbody').classList.toggle('open',drawerOpen)});
+document.getElementById('mbtns').addEventListener('click',e=>{const b=e.target.closest('.mode-btn');if(b)setMode(b.dataset.mode)});
+document.getElementById('dt').addEventListener('click',()=>document.getElementById('dsb').classList.toggle('collapsed'));
+
+// === BUILD UI ===
+function buildUI(){
+  const html=`
+    <div class="acc open"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Controls</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="ctrl-row"><span class="ctrl-lbl">SPEED</span><input type="range" min="0" max="20" value="${spd}" oninput="spd=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${spd}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">SIZE</span><input type="range" min="1" max="10" value="${psize}" oninput="psize=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${psize}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">GLOW</span><input type="range" min="20" max="100" value="${opac}" oninput="opac=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${opac}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">WIRE</span><input type="range" min="0" max="100" value="${wireOpac}" oninput="wireOpac=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${wireOpac}</span></div>
+      <div class="ctrl-row"><span class="ctrl-lbl">VIEW 0-24</span><input type="range" min="0" max="24" value="${viewSlot}" oninput="viewSlot=+this.value;this.nextElementSibling.textContent=this.value"><span class="ctrl-val">${viewSlot}</span></div>
+    </div></div></div>
+
+    <div class="acc open"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Layers</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="toggle-row">
+        <button class="tog-btn l0 active" onclick="showL0=!showL0;this.classList.toggle('active')">L0 E8</button>
+        <button class="tog-btn l1 active" onclick="showL1=!showL1;this.classList.toggle('active')">L1 LEECH</button>
+        <button class="tog-btn l2 active" onclick="showL2=!showL2;this.classList.toggle('active')">L2 CRAIG</button>
+        <button class="tog-btn active" onclick="showVoid=!showVoid;this.classList.toggle('active')">24-CELL</button>
+        <button class="tog-btn active" onclick="showLinks=!showLinks;this.classList.toggle('active')">LINKS</button>
+        <button class="tog-btn active" onclick="breathe=!breathe;this.classList.toggle('active')">BREATHE</button>
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Xylatic Structure</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">L0 E8</div><div class="metric-value">dim 8</div></div>
+        <div class="metric"><div class="metric-label">L1 LEECH</div><div class="metric-value">dim 24</div></div>
+        <div class="metric"><div class="metric-label">L2 CRAIG</div><div class="metric-value">dim 120</div></div>
+        <div class="metric"><div class="metric-label">TWINS</div><div class="metric-value">(3,5)</div></div>
+        <div class="metric"><div class="metric-label">TWINS</div><div class="metric-value">(5,7)</div></div>
+        <div class="metric"><div class="metric-label">TWINS</div><div class="metric-value">(11,13)</div></div>
+        <div class="metric"><div class="metric-label">K&#8320;</div><div class="metric-value">240</div></div>
+        <div class="metric"><div class="metric-label">K&#8321;</div><div class="metric-value">196,560</div></div>
+        <div class="metric"><div class="metric-label">D4</div><div class="metric-value">2,6,30</div></div>
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Nesting Math</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="math-box">
+        Xylatic Total Structure: E8 &sub; &Lambda;&#8322;&#8324; &sub; A&#8321;&#8324;&#8322;&#8317;&#178;&#8318;<br>
+        d = p&sup2;&minus;1: 8, 24, 120<br><br>
+        Torus at each level:<br>
+        L0: D8 &rarr; S&#185;(major), S+ &rarr; S&#185;(minor)<br>
+        L1: (Z/35Z)* &cong; C&#8324;&times;C&#8326; &cong; T&#178;<br>
+        L2: (Z/143Z)* &cong; C&#8321;&#8320;&times;C&#8321;&#8322;<br><br>
+        T-14: 25 inscribed 24-cells in E8<br>
+        PG(2,F&#8324;) projective design<br>
+        Overlap set = {0, 6}<br><br>
+        D4 tiles: 2 &rarr; 6 &rarr; 30<br>
+        Gluing: id &rarr; spinor &rarr; hexacode<br>
+        Scale: &times;3 (=p&#8320;) then &times;5 (=p&#8321;)<br><br>
+        &sigma;-chain: &sigma;(28)=56=pop(&plusmn;2)<br>
+        &sigma;(56)=120=dim(Craig)<br>
+        &sigma;(120)=360=|A&#8326;|<br>
+        &sigma;(60)=168=|PSL(2,7)|<br><br>
+        Bridge: 196,560 = 13 &times; 15,120<br>
+        1365 = 3&middot;5&middot;7&middot;13 = C(15,4)
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Mobius Scaling</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="math-box">
+        Orbit periods: 4 &rarr; 12 &rarr; 60<br>
+        Ratios: 12/4 = 3 = p&#8320;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;60/12 = 5 = p&#8321;<br><br>
+        &sigma;&#8322;&#8329; half-turn at step 6/12<br>
+        Cross-parity = spinor twist<br>
+        Each level inherits &amp; extends<br>
+        the Heegaard splitting S&#179; = D8 &cup;T&#178; S+
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Shell Decomposition</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="math-box">
+        E8 shells: [24, 56, 40, 40, 56, 24]<br>
+        &delta; = &radic;5/10, r&sup2; = 1 + k&middot;&delta;<br>
+        D8 &harr; |k| even, S+ &harr; |k| odd<br>
+        100% type separation (zero mixing)<br>
+        H(type) = 0.997 bits FREE<br><br>
+        Factors: (3,7,5,5,7,3) sum = 30 = h<br>
+        Born rule: P(k) = f(k)/h<br>
+        D-45: pop = rank &times; {p,C(8,3),q}<br>
+        Convexity gap: 1&minus;S = 0.053<br>
+        &delta; = decoherence threshold (D-24)
+      </div>
+    </div></div></div>
+
+    <div class="acc"><div class="acc-head" onclick="this.parentElement.classList.toggle('open')"><h3>Legend</h3><span class="acc-arrow">&#9662;</span></div><div class="acc-body"><div class="acc-content">
+      <div class="legend-row"><div class="leg-dot" style="background:var(--gold)"></div><div class="leg-txt">Level 0: E8 (dim 8, 240 roots)</div></div>
+      <div class="legend-row"><div class="leg-dot" style="background:var(--cyan)"></div><div class="leg-txt">Level 1: Leech (dim 24, K=196,560)</div></div>
+      <div class="legend-row"><div class="leg-dot" style="background:var(--purple)"></div><div class="leg-txt">Level 2: Craig (dim 120)</div></div>
+      <div class="legend-row"><div class="leg-dot" style="background:#fff"></div><div class="leg-txt">24-cell void (D4 core)</div></div>
+      <div class="legend-row"><div class="leg-dot" style="background:rgba(200,169,110,0.4)"></div><div class="leg-txt">Inter-level fiber connections</div></div>
+    </div></div></div>`;
+
+  document.getElementById('dcont').innerHTML=html;
+  const dsb=document.getElementById('dsb');
+  if(dsb)dsb.innerHTML='<div style="margin-bottom:12px"><div class="mode-scroll" id="mbtnsd">'+
+    ['nested','interior','void24','mobius','layers','fiber'].map(m=>`<button class="mode-btn${m==='nested'?' active':''}" data-mode="${m}">${{nested:'NESTED',interior:'INTERIOR',void24:'24-CELL',mobius:'MOBIUS',layers:'LAYERS',fiber:'FIBER'}[m]}</button>`).join('')+
+    '</div></div>'+html;
+  const d=document.getElementById('mbtnsd');if(d)d.addEventListener('click',e=>{const b=e.target.closest('.mode-btn');if(b)setMode(b.dataset.mode)});
+}
+
+// === RESIZE + RENDER ===
+function resize(){
+  const w=innerWidth,h=innerHeight;
+  canvas.width=w*dpr;canvas.height=h*dpr;
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function render(){
+  const W=canvas.width/dpr,H=canvas.height/dpr;
+  ctx.clearRect(0,0,W,H);
+
+  // Subtle grid
+  ctx.strokeStyle='rgba(200,169,110,0.015)';ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Auto-rotate
+  if(autoRotate&&pointers.size===0){rotY+=spd*0.00008;}
+
+  // 1/25 position cycling (for 24-cell view)
+  pulsePhase+=0.001*spd;
+
+  // Dispatch
+  if(mode==='nested')drawNested(W,H);
+  else if(mode==='interior')drawInterior(W,H);
+  else if(mode==='void24')drawVoid24(W,H);
+  else if(mode==='mobius')drawMobius(W,H);
+  else if(mode==='layers')drawLayers(W,H);
+  else if(mode==='fiber')drawFiber(W,H);
+
+  // Camera info
+  const hc=document.getElementById('hud-cam');
+  if(hc)hc.textContent=`zoom:${zoom.toFixed(1)} rot:${(rotY*180/Math.PI%360).toFixed(0)}deg`;
+
+  time++;
+  requestAnimationFrame(render);
+}
+
+buildUI();resize();render();
+addEventListener('resize',resize);
+</script>
+</body>
+</html>

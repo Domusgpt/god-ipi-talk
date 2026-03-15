@@ -1,0 +1,79 @@
+<!--
+  SLIDE 2 — WHAT IS E8?
+  ═════════════════════
+  Duration: ~3 minutes
+  Purpose:  Ground the audience. Make E8 tangible.
+
+  WHAT TO KNOW:
+  E8 is a root system — a set of 240 vectors in 8-dimensional space
+  that satisfy very specific symmetry constraints. Think of it as the
+  answer to the question: "What is the most efficient way to arrange
+  points around a center in 8 dimensions?"
+
+  In 2016, Maryna Viazovska proved that E8 gives the densest sphere
+  packing in 8D. She won the Fields Medal in 2022 for this work.
+  (She also proved the Leech lattice is optimal in 24D — our Level 1.)
+
+  The palindrome [24, 56, 40, 40, 56, 24] emerges from the
+  stereoscopic parity projection. It reads the same forwards
+  and backwards — which means the structure has a built-in
+  mirror symmetry. In physics, mirror symmetries relate
+  matter to antimatter.
+
+  VISUAL: The bars animate upward one by one (see animations.js).
+-->
+<section class="slide"
+  data-notes="~3 min. Keep it simple. 'Imagine packing oranges — but in 8 dimensions. There's exactly ONE way to do it perfectly, and it uses 240 points. That structure is called E8. Viazovska proved this is optimal — she won the Fields Medal for it.' Then point to the palindrome bars as they grow.">
+
+  <h2>What is E8?</h2>
+
+  <p class="desc">
+    In 8 dimensions, exactly <strong style="color:var(--gold)">240 points</strong> pack as
+    tightly as possible around a center.<br>
+    This is the <em>densest sphere packing in 8D</em> — proved by Viazovska (Fields Medal, 2022).
+  </p>
+
+  <div class="gap-lg"></div>
+  <h3>The Shell Palindrome</h3>
+
+  <div class="bar-row" id="palindrome-bars">
+    <!--
+      Each bar's data-h attribute sets its animated height (in px).
+      Heights are 3× the population for visual impact:
+        24 × 3 = 72,  56 × 3 = 168,  40 × 3 = 120
+    -->
+    <div class="bar">
+      <div class="bar-fill" style="height:0;background:var(--cyan)" data-h="72"></div>
+      <div class="bar-value" style="color:var(--cyan)">24</div>
+      <div class="bar-label">k=0</div>
+    </div>
+    <div class="bar">
+      <div class="bar-fill" style="height:0;background:var(--gold)" data-h="168"></div>
+      <div class="bar-value" style="color:var(--gold)">56</div>
+      <div class="bar-label">k=1</div>
+    </div>
+    <div class="bar">
+      <div class="bar-fill" style="height:0;background:var(--purple)" data-h="120"></div>
+      <div class="bar-value" style="color:var(--purple)">40</div>
+      <div class="bar-label">k=2</div>
+    </div>
+    <div class="bar">
+      <div class="bar-fill" style="height:0;background:var(--purple)" data-h="120"></div>
+      <div class="bar-value" style="color:var(--purple)">40</div>
+      <div class="bar-label">k=3</div>
+    </div>
+    <div class="bar">
+      <div class="bar-fill" style="height:0;background:var(--gold)" data-h="168"></div>
+      <div class="bar-value" style="color:var(--gold)">56</div>
+      <div class="bar-label">k=4</div>
+    </div>
+    <div class="bar">
+      <div class="bar-fill" style="height:0;background:var(--cyan)" data-h="72"></div>
+      <div class="bar-value" style="color:var(--cyan)">24</div>
+      <div class="bar-label">k=5</div>
+    </div>
+  </div>
+
+  <p class="eq dim">[<span class="cyan">24</span>, <span class="gold">56</span>, <span class="purple">40</span>, <span class="purple">40</span>, <span class="gold">56</span>, <span class="cyan">24</span>] = <span class="gold">240</span></p>
+  <p class="desc-sm" style="margin-top:.8rem">A perfect palindrome — it reads the same forwards and backwards.</p>
+</section>

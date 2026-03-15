@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>IPI Talk — Geometric Orthogonal Dynamics</title>
+
+<!--
+  ══════════════════════════════════════════════════════════════
+  G.O.D. FRAMEWORK — IPI TALK PRESENTATION
+  ══════════════════════════════════════════════════════════════
+
+  This presentation dynamically loads slides from the slides/
+  directory. Each slide file is a self-contained HTML fragment
+  with extensive comments explaining the mathematics.
+
+  To understand the math, read the slide files directly:
+    slides/01-title.html         → What is this talk about?
+    slides/06-information.html   → The key result (info decomposition)
+    slides/07-vopson.html        → Connection to Infodynamics
+
+  To verify the claims, run:
+    python3 verify/check_all.py  → 30 tests, all must pass
+
+  To explore the data:
+    data/e8-roots.json           → The 240 roots and their shells
+    data/sigma-chain.json        → The σ-chain walk through E8
+    data/information-decomposition.json → The entropy calculation
+
+  CONTROLS:
+    → or Space    Next slide
+    ←             Previous slide
+    F             Fullscreen
+    N             Toggle presenter notes
+    1-9, 0        Jump to slides 1-10
+
+  ARCHITECTURE:
+    On load, this page fetches all 16 slide HTML files and
+    injects them into the DOM. No build step. No bundler.
+    Just a web server and a browser.
+  ══════════════════════════════════════════════════════════════
+-->
+
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;0,600;1,200;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<!--
+  The slide deck container.
+  Slides are injected here by the loader script below.
+  The first slide gets class="active" automatically.
+-->
+<div id="deck"></div>
+
+<!-- HUD overlays (always visible) -->
+<div class="hud-timer" id="timer">0:00</div>
+<div class="hud-counter" id="counter">loading...</div>
+<div class="hud-keys">← → navigate · F fullscreen · N notes</div>
+<div class="notes-bar" id="notes-bar"></div>
+
+<!--
+  ══════════════════════════════════════════════════════════════
+  SLIDE LOADER
+  ══════════════════════════════════════════════════════════════
+  Fetches each slide HTML file and injects it into the deck.
+  This eliminates duplication — each slide exists in exactly
+  one place (its file in slides/).
+
+  The slide files are listed explicitly rather than discovered
+  dynamically because:
+    1. GitHub Pages doesn't support directory listings
+    2. Explicit ordering makes the presentation sequence clear
+    3. Each filename tells you what the slide is about
+  ══════════════════════════════════════════════════════════════
+-->
+<script>
+(async function loadSlides() {
+  // The 16 slides in presentation order.
+  // Each filename maps to a concept in the mathematical framework.
+  const slideFiles = [
+    'slides/01-title.html',
+    'slides/02-what-is-e8.html',
+    'slides/03-e8-live.html',
+    'slides/04-projection.html',
+    'slides/05-shells.html',
+    'slides/06-information.html',
+    'slides/07-vopson.html',
+    'slides/08-sigma-chain.html',
+    'slides/09-rotation-planes.html',
+    'slides/10-klein-quartic.html',
+    'slides/11-tower.html',
+    'slides/12-nested-torus.html',
+    'slides/13-fine-structure.html',
+    'slides/14-established.html',
+    'slides/15-open-questions.html',
+    'slides/16-thanks.html'
+  ];
+
+  const deck = document.getElementById('deck');
+
+  // Fetch all slides in parallel for fast loading
+  const responses = await Promise.all(
+    slideFiles.map(f => fetch(f).then(r => r.text()).catch(() => `
+      <section class="slide" data-notes="Slide failed to load: ${f}">
+        <h2 style="color:var(--orange)">Slide not found</h2>
+        <p class="desc">${f}</p>
+      </section>
+    `))
+  );
+
+  // Parse each response and extract the <section> element
+  const parser = new DOMParser();
+  responses.forEach((html, i) => {
+    const doc = parser.parseFromString(html, 'text/html');
+    const section = doc.querySelector('section.slide');
+    if (section) {
+      // First slide starts active
+      if (i === 0) section.classList.add('active');
+      else section.classList.remove('active');
+      deck.appendChild(section);
+    }
+  });
+
+  // Now load the presentation engine and animations
+  // (they need the slides to be in the DOM first)
+  const animScript = document.createElement('script');
+  animScript.src = 'js/animations.js';
+  document.body.appendChild(animScript);
+
+  animScript.onload = function() {
+    const engineScript = document.createElement('script');
+    engineScript.src = 'js/engine.js';
+    document.body.appendChild(engineScript);
+  };
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+# ═══════════════════════════════════════════════════════════
+# GitHub Pages Deployment for the IPI Talk Presentation
+# ═══════════════════════════════════════════════════════════
+#
+# This workflow deploys the presentation as a static site
+# to GitHub Pages. No build step needed — it's pure HTML/CSS/JS.
+#
+# The presentation will be available at:
+#   https://<username>.github.io/god-ipi-talk/
+#
+# Triggered on push to main branch.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+  # Allow manual deployment from Actions tab
+  workflow_dispatch:
+
+# Sets permissions for GITHUB_TOKEN to allow Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify mathematical claims
+        run: python3 verify/check_all.py
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository as the site
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
