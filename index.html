@@ -4,72 +4,551 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>IPI Talk — Geometric Orthogonal Dynamics</title>
-
-<!--
-  ══════════════════════════════════════════════════════════════
-  G.O.D. FRAMEWORK — IPI TALK PRESENTATION
-  ══════════════════════════════════════════════════════════════
-
-  This presentation dynamically loads slides from the slides/
-  directory. Each slide file is a self-contained HTML fragment
-  with extensive comments explaining the mathematics.
-
-  To understand the math, read the slide files directly:
-    slides/01-title.html         → What is this talk about?
-    slides/06-information.html   → The key result (info decomposition)
-    slides/07-vopson.html        → Connection to Infodynamics
-
-  To verify the claims, run:
-    python3 verify/check_all.py  → 30 tests, all must pass
-
-  To explore the data:
-    data/e8-roots.json           → The 240 roots and their shells
-    data/sigma-chain.json        → The σ-chain walk through E8
-    data/information-decomposition.json → The entropy calculation
-
-  CONTROLS:
-    → or Space    Next slide
-    ←             Previous slide
-    F             Fullscreen
-    N             Toggle presenter notes
-    1-9, 0        Jump to slides 1-10
-
-  ARCHITECTURE:
-    On load, this page fetches all 16 slide HTML files and
-    injects them into the DOM. No build step. No bundler.
-    Just a web server and a browser.
-  ══════════════════════════════════════════════════════════════
--->
-
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;0,600;1,200;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/theme.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/components.css">
+<style>
+:root {
+  --gold:#c8a96e; --cyan:#00e5ff; --purple:#bf7fff; --orange:#ff6b35;
+  --deep:#050508; --panel:rgba(5,5,12,0.96); --border:rgba(200,169,110,0.15);
+  --text:#e8e0d0; --text-dim:#7a7060; --text-bright:#f4f0e8;
+  --gold-glow:rgba(200,169,110,0.15); --cyan-glow:rgba(0,229,255,0.12);
+  --ease:cubic-bezier(.22,1,.36,1); --ease-out:cubic-bezier(0,0,.2,1); --ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--text);font-family:'Crimson Pro',serif}
+
+/* ─── Slide Container ─── */
+.deck{position:relative;width:100vw;height:100vh}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;padding:4vh 6vw;overflow:hidden;transition:opacity .7s var(--ease-out),transform .7s var(--ease-out),filter .7s var(--ease-out);transform:scale(.95) translateY(20px);filter:blur(4px)}
+.slide.active{opacity:1;pointer-events:auto;transform:scale(1) translateY(0);filter:blur(0)}
+.slide.exit-left{opacity:0;transform:scale(.92) translateX(-60px);filter:blur(6px);transition:opacity .5s ease,transform .5s ease,filter .5s ease}
+.slide.exit-right{opacity:0;transform:scale(.92) translateX(60px);filter:blur(6px);transition:opacity .5s ease,transform .5s ease,filter .5s ease}
+.slide .anim-target{opacity:0;transform:translateY(30px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.slide .anim-target.visible{opacity:1;transform:translateY(0)}
+.slide.active iframe{pointer-events:auto}
+
+/* ─── Typography ─── */
+h1{font-family:'Crimson Pro',serif;font-weight:200;font-size:clamp(2rem,5vw,4.2rem);color:var(--text-bright);text-align:center;line-height:1.15;letter-spacing:.02em}
+h2{font-family:'Crimson Pro',serif;font-weight:300;font-size:clamp(1.6rem,3.5vw,3rem);color:var(--gold);text-align:center;line-height:1.2;margin-bottom:1.5rem}
+h3{font-family:'Space Mono',monospace;font-weight:400;font-size:clamp(.85rem,1.8vw,1.3rem);color:var(--cyan);text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem}
+p,.desc{font-family:'Crimson Pro',serif;font-weight:300;font-size:clamp(1rem,2vw,1.55rem);color:var(--text);line-height:1.6;text-align:center;max-width:52em}
+.desc-sm{font-size:clamp(.9rem,1.6vw,1.25rem);color:var(--text-dim)}
+.eq{font-family:'Space Mono',monospace;font-size:clamp(1rem,2.2vw,1.6rem);color:var(--gold);text-align:center;line-height:1.8;white-space:pre-line;margin:1.2rem 0}
+.eq-lg{font-size:clamp(1.4rem,3vw,2.4rem)}
+.eq .cyan{color:var(--cyan)} .eq .purple{color:var(--purple)} .eq .gold{color:var(--gold)} .eq .dim{color:var(--text-dim)} .eq .bright{color:var(--text-bright)}
+blockquote{border-left:3px solid var(--gold);padding:.8rem 1.4rem;margin:1.2rem 0;font-style:italic;color:var(--text);max-width:44em;font-size:clamp(1rem,1.8vw,1.35rem);line-height:1.6}
+
+/* ─── Spacers ─── */
+.gap{height:1.2rem} .gap-lg{height:2.4rem}
+
+/* ─── Bars / Palindrome ─── */
+.bar-row{display:flex;align-items:flex-end;justify-content:center;gap:clamp(6px,1.2vw,16px);margin:1.5rem 0}
+.bar{display:flex;flex-direction:column;align-items:center;gap:6px}
+.bar-fill{width:clamp(36px,6vw,72px);border-radius:4px 4px 0 0;transition:height 1.8s var(--ease-spring);position:relative;overflow:hidden}
+.bar-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 60%);opacity:0;transition:opacity .6s ease 1.8s}
+.bar-fill.grown::after{opacity:1}
+.bar-value{opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease}
+.bar-value.visible{opacity:1;transform:translateY(0)}
+.bar-label{font-family:'Space Mono',monospace;font-size:clamp(.7rem,1.2vw,.95rem);color:var(--text-dim)}
+.bar-value{font-family:'Space Mono',monospace;font-size:clamp(.85rem,1.4vw,1.1rem);font-weight:700}
+
+/* ─── Shell Table ─── */
+.shell-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:clamp(8px,1.5vw,20px);max-width:56em;width:100%;margin:1rem auto}
+.shell-card{background:rgba(200,169,110,.06);border:1px solid var(--border);border-radius:6px;padding:clamp(.6rem,1.2vw,1.2rem);text-align:center;opacity:0;transform:translateY(30px) scale(.9);transition:opacity .6s var(--ease),transform .6s var(--ease),border-color .3s,box-shadow .3s}
+.shell-card.show{opacity:1;transform:translateY(0) scale(1)}
+.shell-card.type-s.show{border-color:rgba(0,229,255,.15);box-shadow:0 0 15px var(--cyan-glow)}
+.shell-card.type-d.show{border-color:rgba(200,169,110,.15);box-shadow:0 0 15px var(--gold-glow)}
+.shell-card.type-m.show{border-color:rgba(191,127,255,.15);box-shadow:0 0 15px rgba(191,127,255,.08)}
+.shell-card .sc-idx{font-family:'Space Mono',monospace;font-size:clamp(.75rem,1vw,.9rem);color:var(--text-dim);margin-bottom:.3rem}
+.shell-card .sc-pop{font-family:'Space Mono',monospace;font-size:clamp(1.4rem,2.5vw,2.2rem);font-weight:700;margin-bottom:.3rem}
+.shell-card .sc-type{font-size:clamp(.75rem,1vw,.9rem);font-family:'Space Mono',monospace}
+.shell-card.type-s .sc-pop{color:var(--cyan)}
+.shell-card.type-d .sc-pop{color:var(--gold)}
+.shell-card.type-m .sc-pop{color:var(--purple)}
+
+/* ─── Info Decomposition ─── */
+.info-table{display:flex;flex-direction:column;align-items:center;gap:.3rem;margin:1rem 0}
+.info-row{display:flex;align-items:center;gap:1rem;font-family:'Space Mono',monospace;font-size:clamp(.95rem,1.8vw,1.35rem);opacity:0;transform:translateX(-20px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.info-row.visible{opacity:1;transform:translateX(0)}
+.info-row.total .val{text-shadow:0 0 20px var(--gold-glow)}
+.info-row .lbl{color:var(--text-dim);min-width:16ch;text-align:right}
+.info-row .val{font-weight:700;min-width:8ch}
+.info-row.total{border-top:2px solid var(--gold);padding-top:.5rem;margin-top:.3rem}
+.info-row.total .val{color:var(--gold)}
+
+/* ─── σ-Chain ─── */
+.sigma-chain{display:flex;flex-direction:column;align-items:center;gap:0;margin:1.5rem 0}
+.sigma-step{display:flex;align-items:center;gap:1.2rem;opacity:0;transform:translateX(-40px) scale(.95);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.sigma-step.show{opacity:1;transform:translateX(0) scale(1)}
+.sigma-num{text-shadow:0 0 20px var(--gold-glow)}
+.sigma-arrow{transform:scaleY(0);transition:opacity .4s ease,transform .4s var(--ease-spring)}
+.sigma-arrow.show{transform:scaleY(1)}
+.sigma-num{font-family:'Space Mono',monospace;font-size:clamp(1.6rem,3vw,2.6rem);font-weight:700;color:var(--gold);min-width:4ch;text-align:right}
+.sigma-desc{font-family:'Crimson Pro',serif;font-size:clamp(.9rem,1.6vw,1.25rem);color:var(--text-dim);max-width:30em}
+.sigma-arrow{font-family:'Space Mono',monospace;font-size:1.4rem;color:var(--cyan);padding:.2rem 0;padding-left:2ch}
+
+/* ─── Stat Cards ─── */
+.stat-row{display:flex;gap:clamp(1rem,3vw,3rem);justify-content:center;flex-wrap:wrap;margin:1.5rem 0}
+.stat-card{background:rgba(200,169,110,.05);border:1px solid var(--border);border-radius:8px;padding:clamp(1rem,2vw,2rem) clamp(1.5rem,3vw,3rem);text-align:center;min-width:10rem;opacity:0;transform:translateY(30px) scale(.9);transition:opacity .6s var(--ease),transform .6s var(--ease),box-shadow .3s}
+.stat-card.visible{opacity:1;transform:translateY(0) scale(1)}
+.stat-card .sc-num{text-shadow:0 0 25px var(--gold-glow)}
+.stat-card .sc-num{font-family:'Space Mono',monospace;font-size:clamp(2rem,4vw,3.4rem);font-weight:700;color:var(--gold)}
+.stat-card .sc-lbl{font-family:'Space Mono',monospace;font-size:clamp(.7rem,1.1vw,.9rem);color:var(--text-dim);text-transform:uppercase;letter-spacing:.12em;margin-top:.3rem}
+
+/* ─── Iframe Slides ─── */
+.iframe-wrap{position:absolute;inset:0}
+.iframe-wrap iframe{width:100%;height:100%;border:none;opacity:0;transition:opacity 1s var(--ease-out)}
+.iframe-wrap iframe.loaded{opacity:1}
+.iframe-wrap::before{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(200,169,110,.04) 40%,rgba(0,229,255,.04) 50%,transparent 60%);background-size:200% 100%;animation:shimmer 2s ease-in-out infinite;z-index:5;pointer-events:none;transition:opacity .5s ease}
+.iframe-wrap.loaded::before{opacity:0}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.iframe-overlay{position:absolute;bottom:0;left:0;right:0;padding:1.2rem 2rem;background:linear-gradient(transparent,rgba(5,5,8,.92) 40%);pointer-events:none;z-index:10}
+.iframe-overlay p{text-align:left;font-size:clamp(.85rem,1.4vw,1.15rem);color:var(--text);max-width:none;line-height:1.5}
+.iframe-overlay .io-title{font-family:'Space Mono',monospace;font-size:clamp(.9rem,1.6vw,1.2rem);color:var(--gold);margin-bottom:.3rem}
+
+/* ─── Side-by-Side ─── */
+.split{display:flex;gap:clamp(1.5rem,3vw,4rem);align-items:center;justify-content:center;width:100%;max-width:60em;flex-wrap:wrap}
+.split-half{flex:1;min-width:16rem}
+
+/* ─── HUD: Timer + Counter ─── */
+.hud-timer{position:fixed;top:12px;right:16px;font-family:'Space Mono',monospace;font-size:.85rem;color:var(--text-dim);z-index:200;pointer-events:none}
+.hud-counter{position:fixed;bottom:12px;right:16px;font-family:'Space Mono',monospace;font-size:.85rem;color:var(--text-dim);z-index:200;pointer-events:none}
+.hud-keys{position:fixed;bottom:12px;left:16px;font-family:'Space Mono',monospace;font-size:.72rem;color:rgba(122,112,96,.5);z-index:200;pointer-events:none}
+
+/* ─── Presenter Notes ─── */
+.notes-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);color:var(--text);font-family:'Space Mono',monospace;font-size:.82rem;padding:.7rem 1.5rem;z-index:300;transform:translateY(100%);transition:transform .3s ease;line-height:1.5;border-top:1px solid var(--border)}
+.notes-bar.show{transform:translateY(0)}
+
+/* ─── Mobile Nav Bar ─── */
+.nav-bar{display:none;position:fixed;top:0;left:0;right:0;height:44px;z-index:210;align-items:center;justify-content:space-between;background:linear-gradient(rgba(5,5,8,.85),transparent);-webkit-tap-highlight-color:transparent;touch-action:pan-x}
+.nav-prev,.nav-next{width:56px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--gold);cursor:pointer;user-select:none}
+.nav-prev:active,.nav-next:active{opacity:.5}
+.nav-title{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.1em;color:var(--text-dim);text-align:center;flex:1;pointer-events:none}
+.edge-zone{display:none;position:fixed;top:44px;bottom:60px;width:28px;z-index:205;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.edge-zone.edge-left{left:0}
+.edge-zone.edge-right{right:0}
+@media(hover:none) and (pointer:coarse){.nav-bar{display:flex}.edge-zone{display:block}}
+
+/* ─── Mobile Menu & Review Mode ─── */
+.mobile-menu-btn{display:none;position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-family:'Space Mono',monospace;font-size:.8rem;letter-spacing:.15em;color:var(--gold);background:rgba(200,169,110,.12);border:1px solid rgba(200,169,110,.35);padding:8px 24px;border-radius:20px;z-index:250;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--cyan));z-index:300;transition:width .5s var(--ease);box-shadow:0 0 12px var(--gold-glow),0 0 30px var(--cyan-glow)}
+.particle-field{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;opacity:0;animation:float-particle linear infinite}
+@keyframes float-particle{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:.6}90%{opacity:.6}100%{transform:translateY(-10vh) scale(1);opacity:0}}
+.review-mode .slide{transition:opacity .05s ease;transform:none!important;filter:none!important}
+.review-mode .shell-card,.review-mode .sigma-step,.review-mode .sigma-arrow,.review-mode .bar-fill{transition:none!important}
+.slide-overview{position:fixed;inset:0;background:rgba(5,5,8,.95);backdrop-filter:blur(12px);z-index:500;display:none;padding:2rem;overflow-y:auto}
+.slide-overview.open{display:block}
+.slide-overview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;max-width:40rem;margin:0 auto}
+.slide-overview-item{background:rgba(200,169,110,.05);border:1px solid var(--border);border-radius:6px;padding:.8rem;cursor:pointer;min-height:3.5rem;-webkit-tap-highlight-color:transparent}
+.slide-overview-item.current{border-color:var(--cyan)}
+.slide-overview-num{font-family:'Space Mono',monospace;font-size:.75rem;color:var(--text-dim);margin-bottom:.3rem}
+.slide-overview-title{font-family:'Crimson Pro',serif;font-size:1rem;color:var(--text);line-height:1.3}
+@media(hover:none) and (pointer:coarse){.mobile-menu-btn{display:block}.hud-keys{display:none}.hud-counter{pointer-events:auto;font-size:1rem;padding:6px 12px;background:rgba(200,169,110,.08);border-radius:4px}}
+
+/* ─── Title Slide Background ─── */
+.title-bg{position:absolute;inset:0;overflow:hidden;z-index:0}
+.title-bg::before{content:'';position:absolute;top:50%;left:50%;width:140vmax;height:140vmax;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(200,169,110,.1) 0%,rgba(0,229,255,.05) 30%,rgba(191,127,255,.02) 50%,transparent 60%);animation:pulse 6s ease-in-out infinite alternate}
+.title-bg::after{content:'';position:absolute;top:50%;left:50%;width:80vmax;height:80vmax;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(200,169,110,.06);animation:ring-expand 12s ease-in-out infinite}
+@keyframes pulse{0%{opacity:.5;transform:translate(-50%,-50%) scale(1) rotate(0deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(3deg)}}
+@keyframes ring-expand{0%{transform:translate(-50%,-50%) scale(.8);opacity:.3}50%{transform:translate(-50%,-50%) scale(1.2);opacity:.08}100%{transform:translate(-50%,-50%) scale(.8);opacity:.3}}
+.title-content{position:relative;z-index:1}
+
+/* ─── 137 Display ─── */
+.big-num{font-family:'Space Mono',monospace;font-size:clamp(4rem,10vw,9rem);font-weight:700;color:var(--gold);text-align:center;line-height:1;animation:big-num-glow 3s ease-in-out infinite alternate}
+@keyframes big-num-glow{0%{text-shadow:0 0 40px rgba(200,169,110,.2),0 0 80px rgba(200,169,110,.08)}100%{text-shadow:0 0 60px rgba(200,169,110,.4),0 0 120px rgba(200,169,110,.15),0 0 200px rgba(200,169,110,.05)}}
+
+/* ─── Open Questions ─── */
+.oq-list{list-style:none;max-width:44em;margin:1rem auto}
+.oq-list li{padding:.6rem 0;border-bottom:1px solid rgba(200,169,110,.08);font-family:'Crimson Pro',serif;font-size:clamp(1rem,1.8vw,1.35rem);color:var(--text);line-height:1.5;opacity:0;transform:translateX(-20px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.oq-list li.visible{opacity:1;transform:translateX(0)}
+.oq-list li::before{content:'→ ';color:var(--cyan);font-family:'Space Mono',monospace}
+
+/* ─── Thanks ─── */
+.thanks-grid{display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin:1.5rem 0}
+.thanks-name{font-family:'Space Mono',monospace;font-size:clamp(.85rem,1.4vw,1.1rem);color:var(--text-dim);padding:.5rem 1.2rem;border:1px solid var(--border);border-radius:4px}
+
+/* ═══ ANIMATED DIAGRAMS ═══ */
+
+/* ── Projection Animation (slide 4) ── */
+.proj-anim{position:relative;width:min(320px,50vw);height:min(320px,50vw);margin:0 auto}
+.proj-anim canvas{width:100%;height:100%}
+
+/* ── Concentric Rings (slide 5) ── */
+.rings-anim{position:relative;width:min(260px,40vw);height:min(260px,40vw);margin:1rem auto 0}
+.rings-anim canvas{width:100%;height:100%}
+
+/* ── Info Bits Tree (slide 6) ── */
+.bits-anim{position:relative;width:100%;max-width:500px;height:180px;margin:0.5rem auto}
+.bits-anim canvas{width:100%;height:100%}
+
+/* ── σ divisor viz (slide 8) ── */
+.sigma-viz{display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-top:.3rem;min-height:24px}
+.sigma-divisor{display:inline-block;font-family:'Space Mono',monospace;font-size:clamp(.7rem,1.1vw,.9rem);padding:2px 6px;border-radius:3px;background:rgba(0,229,255,.1);color:var(--cyan);border:1px solid rgba(0,229,255,.2);opacity:0;transform:scale(.5);transition:opacity .3s ease,transform .3s var(--ease-spring)}
+.sigma-divisor.visible{opacity:1;transform:scale(1)}
+.sigma-equals{font-family:'Space Mono',monospace;font-size:.9rem;color:var(--text-dim);opacity:0;transition:opacity .3s ease}
+.sigma-equals.visible{opacity:1}
+
+/* ── 137 decomp blocks (slide 13) ── */
+.decomp-blocks{display:flex;align-items:flex-end;justify-content:center;gap:clamp(6px,1.5vw,16px);margin:1rem auto;height:160px}
+.decomp-block{display:flex;flex-direction:column;align-items:center;gap:.4rem}
+.decomp-bar{border-radius:4px;width:clamp(60px,10vw,100px);transition:height 1.5s var(--ease-spring);position:relative;overflow:hidden}
+.decomp-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,transparent 50%)}
+.decomp-bar-val{font-family:'Space Mono',monospace;font-size:clamp(1.2rem,2.5vw,2rem);font-weight:700}
+.decomp-bar-lbl{font-family:'Space Mono',monospace;font-size:clamp(.65rem,1vw,.8rem);color:var(--text-dim);text-align:center;max-width:100px}
+.decomp-plus{font-family:'Space Mono',monospace;font-size:2rem;color:var(--text-dim);align-self:center;padding-bottom:40px;opacity:0;transition:opacity .5s ease}
+.decomp-plus.visible{opacity:1}
+
+/* ── Verification ticks (slide 14) ── */
+.verify-bar{width:100%;max-width:400px;height:8px;background:rgba(200,169,110,.1);border-radius:4px;margin:0.5rem auto;overflow:hidden;position:relative}
+.verify-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--cyan));border-radius:4px;transition:width 2s var(--ease)}
+.verify-fill.full{width:100%}
+.verify-label{font-family:'Space Mono',monospace;font-size:.75rem;color:var(--text-dim);text-align:center;margin-top:.2rem}
+
+/* ── Responsive ─── */
+@media(max-width:700px){
+  .split{flex-direction:column}
+  .shell-grid{grid-template-columns:repeat(3,1fr)}
+  .stat-row{flex-direction:column;align-items:center}
+  .info-row{flex-direction:column;gap:.2rem}
+  .info-row .lbl{text-align:center;min-width:auto}
+  .decomp-blocks{height:120px}
+  .proj-anim,.rings-anim{width:min(220px,60vw);height:min(220px,60vw)}
+}
+</style>
 </head>
 <body>
 
-<!--
-  The slide deck container.
-  Slides are injected here by the loader script below.
-  The first slide gets class="active" automatically.
--->
-<div id="deck"></div>
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 1 — TITLE CARD
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide active"
+  data-notes="Welcome everyone to this IPI Talk. ~30 seconds here. Let the title breathe. Introduce yourself briefly: 'I'm Paul Phillips, an independent researcher. Today I want to show you something I found hiding inside the most symmetric object in mathematics.'">
+  <div class="title-bg"></div>
+  <div class="title-content" style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+    <h3>Information Physics Institute Talk</h3>
+    <h1>Geometric Orthogonal<br>Dynamics</h1>
+    <div class="gap"></div>
+    <p style="font-size:clamp(1.1rem,2.2vw,1.7rem);color:var(--gold);font-weight:300">How the E8 Root System Reveals<br>Information as a Physical Quantity</p>
+    <div class="gap-lg"></div>
+    <p class="desc-sm">Paul J. Phillips &nbsp;·&nbsp; Clear Seas Solutions LLC</p>
+  </div>
+</section>
 
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 2 — WHAT IS E8?
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~3 min. Keep it simple. 'Imagine packing oranges — but in 8 dimensions. There's exactly ONE way to do it perfectly, and it uses 240 points. That structure is called E8. Maryna Viazovska proved this is optimal — she won the Fields Medal for it in 2022.' Then point to the palindrome bars.">
+  <h2>What is E8?</h2>
+  <p class="desc">In 8 dimensions, exactly <strong style="color:var(--gold)">240 points</strong> pack as tightly as possible around a center.<br>This is the <em>densest sphere packing in 8D</em> — proved by Viazovska (Fields Medal, 2022).</p>
+  <div class="gap-lg"></div>
+  <h3>The Shell Palindrome</h3>
+  <div class="bar-row" id="palindrome-bars">
+    <div class="bar"><div class="bar-fill" style="height:0;background:var(--cyan)" data-h="72"></div><div class="bar-value" style="color:var(--cyan)">24</div><div class="bar-label">k=0</div></div>
+    <div class="bar"><div class="bar-fill" style="height:0;background:var(--gold)" data-h="168"></div><div class="bar-value" style="color:var(--gold)">56</div><div class="bar-label">k=1</div></div>
+    <div class="bar"><div class="bar-fill" style="height:0;background:var(--purple)" data-h="120"></div><div class="bar-value" style="color:var(--purple)">40</div><div class="bar-label">k=2</div></div>
+    <div class="bar"><div class="bar-fill" style="height:0;background:var(--purple)" data-h="120"></div><div class="bar-value" style="color:var(--purple)">40</div><div class="bar-label">k=3</div></div>
+    <div class="bar"><div class="bar-fill" style="height:0;background:var(--gold)" data-h="168"></div><div class="bar-value" style="color:var(--gold)">56</div><div class="bar-label">k=4</div></div>
+    <div class="bar"><div class="bar-fill" style="height:0;background:var(--cyan)" data-h="72"></div><div class="bar-value" style="color:var(--cyan)">24</div><div class="bar-label">k=5</div></div>
+  </div>
+  <p class="eq dim">[24, 56, 40, 40, 56, 24] = <span class="gold">240</span></p>
+  <p class="desc-sm" style="margin-top:.8rem">A perfect palindrome — it reads the same forwards and backwards.</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 3 — LIVE E8 VISUALIZER
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~3 min. DEMO TIME. Rotate the projection. Say: 'Each dot is one of those 240 roots, projected from 8D into 2D.' Toggle shells on to show the 6 rings. Toggle D8 (gold) vs S+ (cyan) to show type separation. Let people absorb the visual.">
+  <div class="iframe-wrap">
+    <iframe data-src="e8.html" loading="lazy"></iframe>
+    <div class="iframe-overlay">
+      <div class="io-title">LIVE &nbsp;·&nbsp; E8 Root System</div>
+      <p>240 roots projected from 8 dimensions → 2D using Coxeter eigenplanes.<br>
+      <span style="color:var(--text-dim)">Interact: drag to rotate · toggle shells · toggle D8/S+ types</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 4 — THE STEREOSCOPIC PARITY PROJECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~2.5 min. 'The standard projection mixes everything together. I found that if you flip one coordinate axis — a parity involution — before projecting, the two types of roots separate into distinct shells. This is the stereoscopic parity projection.' Point to the equation: the golden ratio appears naturally.">
+  <h2>The Stereoscopic Parity Projection</h2>
+  <div class="gap"></div>
+  <div class="split">
+    <div class="split-half">
+      <h3>The Discovery</h3>
+      <p class="desc" style="text-align:left;font-size:clamp(.95rem,1.6vw,1.25rem)">Conjugate the Coxeter element by a parity involution — flip one coordinate axis, then project.</p>
+      <div class="gap"></div>
+      <p class="desc" style="text-align:left;font-size:clamp(.95rem,1.6vw,1.25rem)">This separates the <strong style="color:var(--gold)">112 integer roots</strong> (D8) from the <strong style="color:var(--cyan)">128 spinor roots</strong> (S+) into distinct shells.</p>
+    </div>
+    <div class="split-half" style="text-align:center">
+      <h3>Shell Radii</h3>
+      <div class="proj-anim"><canvas id="proj-canvas"></canvas></div>
+      <div class="eq eq-lg" style="margin-top:.5rem">r²<sub>k</sub> = 1 + k · <span class="gold">√5</span>/10</div>
+      <p class="desc-sm">The golden ratio √5 appears in the shell spacing —<br>not imposed, but <em>emergent</em> from E8 geometry.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 5 — SHELL STRUCTURE
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~2 min. Cards appear one by one. 'Every shell is type-pure. Shell k=-3: 24 spinor roots. Shell k=-2: 56 integer roots. Shell k=-1: 40 spinor. And the mirror. PERFECT type separation — proved, not assumed.'">
+  <h2>Perfect Type Separation</h2>
+  <p class="desc" style="margin-bottom:0.5rem">Every shell contains <em>exactly one</em> root type. No mixing.</p>
+  <div class="gap"></div>
+  <div class="shell-grid" id="shell-grid">
+    <div class="shell-card type-s"><div class="sc-idx">k = -3</div><div class="sc-pop">24</div><div class="sc-type" style="color:var(--cyan)">ALL S+</div></div>
+    <div class="shell-card type-d"><div class="sc-idx">k = -2</div><div class="sc-pop">56</div><div class="sc-type" style="color:var(--gold)">ALL D8</div></div>
+    <div class="shell-card type-s"><div class="sc-idx">k = -1</div><div class="sc-pop">40</div><div class="sc-type" style="color:var(--cyan)">ALL S+</div></div>
+    <div class="shell-card type-s"><div class="sc-idx">k = +1</div><div class="sc-pop">40</div><div class="sc-type" style="color:var(--cyan)">ALL S+</div></div>
+    <div class="shell-card type-d"><div class="sc-idx">k = +2</div><div class="sc-pop">56</div><div class="sc-type" style="color:var(--gold)">ALL D8</div></div>
+    <div class="shell-card type-s"><div class="sc-idx">k = +3</div><div class="sc-pop">24</div><div class="sc-type" style="color:var(--cyan)">ALL S+</div></div>
+  </div>
+  <div class="rings-anim"><canvas id="rings-canvas"></canvas></div>
+  <p class="eq dim" style="margin-top:.5rem">[<span class="cyan">24</span>, <span class="gold">56</span>, <span class="cyan">40</span>, <span class="cyan">40</span>, <span class="gold">56</span>, <span class="cyan">24</span>]</p>
+  <p class="desc" style="margin-top:.4rem"><em>Matter mirrors antimatter.</em> The structure is its own reflection.</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 6 — INFORMATION HAS WEIGHT
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~3 min. KEY SLIDE. 'Now here's the breakthrough. Each root carries a measurable amount of information. We can decompose it into three layers — type, shell, and position. They sum to EXACTLY log₂(240) = 7.907 bits. Nothing lost. Nothing added. The geometry itself perfectly conserves information.' Pause here for effect.">
+  <h2>Information Has Weight</h2>
+  <p class="desc">Each of the 240 roots carries a precise, measurable amount of information.<br>It decomposes into three layers — and they sum <em>exactly</em>.</p>
+  <div class="gap-lg"></div>
+  <div class="info-table">
+    <div class="info-row"><span class="lbl">H(type)</span><span class="val" style="color:var(--cyan)">0.997 bits</span></div>
+    <div class="info-row"><span class="lbl">H(shell | type)</span><span class="val" style="color:var(--purple)">1.509 bits</span></div>
+    <div class="info-row"><span class="lbl">H(position | shell)</span><span class="val" style="color:var(--text)">5.401 bits</span></div>
+    <div class="info-row total"><span class="lbl">Total</span><span class="val">7.907 bits</span></div>
+  </div>
+  <div class="bits-anim"><canvas id="bits-canvas"></canvas></div>
+  <p class="eq"><span class="gold">7.907</span> = log₂(<span class="bright">240</span>)</p>
+  <p class="desc" style="margin-top:.3rem">The geometry encodes <em>exactly</em> log₂(240) bits.<br><strong style="color:var(--gold)">Nothing lost. Nothing added.</strong> Information is perfectly conserved.</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 7 — VOPSON'S 2ND LAW CONNECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~3 min. CLIMAX SLIDE. 'Dr. Vopson proposed that information content in physical systems tends toward minimum values. What I found is that E8 — the most symmetric lattice in mathematics — already satisfies this law. The projection organizes information into the minimum number of layers needed. This is an independent mathematical validation.' Give credit. Be humble but clear.">
+  <h2>Validating the 2nd Law of Infodynamics</h2>
+  <div class="gap"></div>
+  <div class="split">
+    <div class="split-half">
+      <h3>Vopson's 2nd Law</h3>
+      <blockquote>"The information content of physical systems tends toward minimum values consistent with symmetry constraints."</blockquote>
+      <p class="desc-sm" style="text-align:left">— Dr. Melvin Vopson,<br>University of Portsmouth</p>
+    </div>
+    <div class="split-half">
+      <h3>What E8 Shows</h3>
+      <p class="desc" style="text-align:left;font-size:clamp(.95rem,1.6vw,1.2rem)">E8 — the most symmetric lattice in mathematics — <strong style="color:var(--gold)">already satisfies this</strong>.</p>
+      <div class="gap"></div>
+      <p class="desc" style="text-align:left;font-size:clamp(.95rem,1.6vw,1.2rem)">The projection organizes information into the <em>minimum</em> number of layers needed to fully describe every root.</p>
+      <div class="gap"></div>
+      <p class="desc" style="text-align:left;font-size:clamp(.95rem,1.6vw,1.2rem);color:var(--gold)">An independent mathematical validation from pure geometry.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 8 — THE σ-CHAIN
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~2.5 min. Steps appear one by one. 'The divisor sum function σ — you just add up all divisors of a number — walks through every important structure in E8. Start with 28 rotation planes, the 2nd perfect number. σ(28) = 56, the D8 population. σ(56) = 120, the sum of E8 exponents. σ(120) = 360, the order of A₆, which governs 6 shells. These aren't cherry-picked — they ARE E8.'">
+  <h2>The σ-Chain</h2>
+  <p class="desc">The divisor sum function walks through every structure in E8.</p>
+  <div class="gap-lg"></div>
+  <div class="sigma-chain" id="sigma-chain">
+    <div class="sigma-step"><span class="sigma-num">28</span><span class="sigma-desc">rotation planes in 8D &nbsp;(2nd perfect number)</span></div>
+    <div class="sigma-arrow">↓ σ(28)</div>
+    <div class="sigma-viz" data-divisors="1,2,4,7,14,28" data-sum="56"></div>
+    <div class="sigma-step"><span class="sigma-num">56</span><span class="sigma-desc">D8 shell population &nbsp;(integer roots)</span></div>
+    <div class="sigma-arrow">↓ σ(56)</div>
+    <div class="sigma-viz" data-divisors="1,2,4,7,8,14,28,56" data-sum="120"></div>
+    <div class="sigma-step"><span class="sigma-num">120</span><span class="sigma-desc">Σ(E8 exponents) = dim(Level 2) = |600-cell|</span></div>
+    <div class="sigma-arrow">↓ σ(120)</div>
+    <div class="sigma-viz" data-divisors="1,2,3,4,5,6,8,10,12,15,20,24,30,40,60,120" data-sum="360"></div>
+    <div class="sigma-step"><span class="sigma-num">360</span><span class="sigma-desc">|A₆| — alternating group on 6 elements → 6 shells</span></div>
+  </div>
+  <div class="gap-lg"></div>
+  <p class="desc" style="color:var(--gold)">These aren't cherry-picked — they <em>are</em> E8.</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 9 — ROTATION PLANES VISUALIZER
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~2 min. DEMO. 'Here you can see the 28 rotation planes in 8 dimensions. They form 378 pairs. 168 are non-orthogonal — that number is the order of PSL(2,7), the symmetry group of the Klein quartic. The ratio 168:210 = 4:5.' Interact with the visualizer.">
+  <div class="iframe-wrap">
+    <iframe data-src="rotation-planes.html" loading="lazy"></iframe>
+    <div class="iframe-overlay">
+      <div class="io-title">LIVE &nbsp;·&nbsp; 28 Rotation Planes in 8D</div>
+      <p>378 pairs → <span style="color:var(--cyan)">168 non-orthogonal</span> = |PSL(2,7)| &nbsp;·&nbsp; <span style="color:var(--gold)">210 orthogonal</span> &nbsp;·&nbsp; Ratio: <strong>4 : 5</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 10 — KLEIN QUARTIC
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~2 min. DEMO. 'This is the Klein quartic — the most symmetric surface possible at genus 3. It has exactly 168 symmetries, matching our non-orthogonal rotation plane pairs. And 168/210 = 4/5 — a major third in music. The geometry literally encodes harmony.' Switch between Poincaré disk and genus-3 views.">
+  <div class="iframe-wrap">
+    <iframe data-src="klein-quartic.html" loading="lazy"></iframe>
+    <div class="iframe-overlay">
+      <div class="io-title">LIVE &nbsp;·&nbsp; The Klein Quartic</div>
+      <p>168 symmetries — the most symmetric Riemann surface at genus 3.<br>
+      <span style="color:var(--text-dim)">168 / 210 = 4/5 — a major third in music. The geometry encodes harmony.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 11 — THE TOWER (LATIZURUS)
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~3 min. FLAGSHIP DEMO. 'E8 is just the first level. Using twin prime pairs, the same structure extends to the Leech lattice in 24 dimensions and the Craig lattice in dimension 142. Each level is connected by the same golden ratio and σ-chains.' Use the BABEL slider to move between levels.">
+  <div class="iframe-wrap">
+    <iframe data-src="latizurus.html" loading="lazy"></iframe>
+    <div class="iframe-overlay">
+      <div class="io-title">LIVE &nbsp;·&nbsp; The Lattice Tower</div>
+      <p>E8 → Leech → Craig &nbsp;·&nbsp; Twin prime pairs connect each level.<br>
+      <span style="color:var(--text-dim)">Use the BABEL slider to ascend the tower. Same golden ratio at every scale.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 12 — NESTED TORUS
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~1.5 min. 'Three levels nested like Russian dolls — E8 inside Leech inside Craig. Connected by fiber structures and the Clifford torus geometry.' Let it rotate. Brief slide — visual impact.">
+  <div class="iframe-wrap">
+    <iframe data-src="nested-torus.html" loading="lazy"></iframe>
+    <div class="iframe-overlay">
+      <div class="io-title">LIVE &nbsp;·&nbsp; Nested Torus — Three Lattice Levels</div>
+      <p>E8 · Leech · Craig — nested like Russian dolls, connected by Clifford torus fiber structures.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 13 — THE 137 CONNECTION
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~2 min. '137 — the inverse fine structure constant — the most important dimensionless number in physics. Feynman called it one of the greatest mysteries. In this framework, it decomposes naturally: 128 spinor roots + 8 dimensions + 1 identity. And 137 is the 33rd prime — 33 is the final value of the 12-step spinor orbit.' Let this sink in.">
+  <h3>The Fine Structure Constant</h3>
+  <div class="gap"></div>
+  <div class="big-num" id="big-137">137</div>
+  <div class="gap"></div>
+  <div class="decomp-blocks" id="decomp-137">
+    <div class="decomp-block">
+      <div class="decomp-bar-val" style="color:var(--cyan)">128</div>
+      <div class="decomp-bar" style="height:0;background:var(--cyan)" data-h="128"></div>
+      <div class="decomp-bar-lbl">|S+| spinors</div>
+    </div>
+    <div class="decomp-plus">+</div>
+    <div class="decomp-block">
+      <div class="decomp-bar-val" style="color:var(--gold)">8</div>
+      <div class="decomp-bar" style="height:0;background:var(--gold)" data-h="8"></div>
+      <div class="decomp-bar-lbl">dim(E8)</div>
+    </div>
+    <div class="decomp-plus">+</div>
+    <div class="decomp-block">
+      <div class="decomp-bar-val" style="color:var(--text-bright)">1</div>
+      <div class="decomp-bar" style="height:0;background:var(--text-bright)" data-h="1"></div>
+      <div class="decomp-bar-lbl">|identity|</div>
+    </div>
+  </div>
+  <div class="gap"></div>
+  <p class="desc">The inverse fine structure constant — the most important<br>dimensionless number in physics — decomposes naturally.</p>
+  <p class="desc-sm" style="margin-top:.5rem">137 is the 33rd prime. &nbsp;33 is the final value of the 12-step spinor orbit.</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 14 — WHAT'S ESTABLISHED
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~2 min. 'Every single claim I've shown you today is computationally verified. 361 out of 361 proof tests pass. 43 theorems, each classified as either fully proved, computationally verified, or clearly marked as conjecture. 52 distinct discoveries. Zero failures.' Emphasize rigor.">
+  <h2>What's Established</h2>
+  <div class="gap-lg"></div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="sc-num">361/361</div><div class="sc-lbl">Proof Tests Pass</div></div>
+    <div class="stat-card"><div class="sc-num">43</div><div class="sc-lbl">Theorems</div></div>
+    <div class="stat-card"><div class="sc-num">52</div><div class="sc-lbl">Discoveries</div></div>
+  </div>
+  <div class="gap"></div>
+  <div class="verify-bar"><div class="verify-fill" id="verify-fill"></div></div>
+  <div class="verify-label" id="verify-label">0 / 361 tests passing...</div>
+  <div class="gap-lg"></div>
+  <p class="desc">Every claim is classified: &nbsp;<strong style="color:var(--gold)">Proved</strong> · <strong style="color:var(--cyan)">Computationally Verified</strong> · <strong style="color:var(--purple)">Conjecture</strong></p>
+  <div class="gap"></div>
+  <p class="desc">The projection, shell decomposition, information content, and σ-chains<br>are <em>rigorous mathematics</em>. Zero failures.</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 15 — WHAT'S NEXT
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="~2 min. Be honest about what's proven vs conjectured. 'The Twin Prime Tower is a conjecture — beautiful but unproven. The physical interpretation needs experimental work — exactly the kind Dr. Vopson is pioneering. And the codon mapping through D4 triality is early-stage exploration.' Invite collaboration.">
+  <h2>Open Questions</h2>
+  <div class="gap-lg"></div>
+  <ul class="oq-list">
+    <li><strong style="color:var(--gold)">Twin Prime Tower of Babel</strong> — Does the lattice tower extend infinitely via twin prime pairs? &nbsp;<span style="color:var(--purple)">[Conjecture]</span></li>
+    <li><strong style="color:var(--gold)">Physical Interpretation</strong> — Can the information content of E8 roots be measured experimentally?</li>
+    <li><strong style="color:var(--gold)">D4 Triality → Genetic Code</strong> — The 64 codons and D4 triality share deep structural parallels. &nbsp;<span style="color:var(--purple)">[Early exploration]</span></li>
+    <li><strong style="color:var(--gold)">Collaboration</strong> — This framework is open source. Every visualization runs live in your browser right now.</li>
+  </ul>
+  <div class="gap-lg"></div>
+  <p class="desc" style="color:var(--gold)">The math is public. The code is open.<br>Everything you've seen is running live.</p>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SLIDE 16 — THANK YOU
+     ════════════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="Thank everyone. Mention Vopson specifically for the invitation and for his foundational work in information physics. Thank Greg Moxness for the E8 shell palindrome collaboration. Open for Q&A.">
+  <div class="title-bg"></div>
+  <div class="title-content" style="display:flex;flex-direction:column;align-items:center;gap:1.2rem">
+    <h2 style="font-size:clamp(2rem,4.5vw,3.8rem);color:var(--text-bright)">Thank You</h2>
+    <div class="gap"></div>
+    <div class="thanks-grid">
+      <div class="thanks-name">Dr. Melvin Vopson</div>
+      <div class="thanks-name">G_V Moxness</div>
+      <div class="thanks-name">Information Physics Institute</div>
+    </div>
+    <div class="gap-lg"></div>
+    <h3>Explore the Framework</h3>
+    <p class="eq" style="font-size:clamp(1rem,2vw,1.5rem)">github.com/Domusgpt/Geometric-Orthogonal-Dynamics</p>
+    <div class="gap"></div>
+    <p class="desc-sm">Paul Phillips &nbsp;·&nbsp; phillips.paul.email@gmail.com &nbsp;·&nbsp; Clear Seas Solutions LLC</p>
+    <div class="gap-lg"></div>
+    <p class="desc-sm" style="color:var(--text-dim);font-size:.85rem">Press ← → to navigate &nbsp;·&nbsp; F for fullscreen &nbsp;·&nbsp; N for presenter notes</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HUD OVERLAYS
+     ════════════════════════════════════════════════════════════════ -->
 <!-- Navigation bar — sits above iframes so swipe/tap always works -->
 <div class="nav-bar" id="nav-bar">
   <div class="nav-prev" id="nav-prev">‹</div>
   <div class="nav-title" id="nav-title">IPI Talk</div>
   <div class="nav-next" id="nav-next">›</div>
 </div>
-
-<!-- Edge tap zones — thin strips on left/right edges above iframes -->
 <div class="edge-zone edge-left" id="edge-left"></div>
 <div class="edge-zone edge-right" id="edge-right"></div>
 
-<!-- HUD overlays (always visible) -->
 <div class="hud-timer" id="timer">0:00</div>
-<div class="hud-counter" id="counter" style="cursor:pointer">loading...</div>
-<div class="hud-keys">← → navigate · R review · G grid · F fullscreen · N notes</div>
+<div class="hud-counter" id="counter" style="cursor:pointer">1 / 16</div>
+<div class="hud-keys" id="hud-keys">← → navigate · R review · G grid · F fullscreen · N notes</div>
 <div class="mobile-menu-btn" id="mobile-menu-btn">MENU</div>
 <div class="notes-bar" id="notes-bar"></div>
 
@@ -78,80 +557,721 @@
   <div class="slide-overview-grid" id="slide-overview-grid"></div>
 </div>
 
-<!--
-  ══════════════════════════════════════════════════════════════
-  SLIDE LOADER
-  ══════════════════════════════════════════════════════════════
-  Fetches each slide HTML file and injects it into the deck.
-  This eliminates duplication — each slide exists in exactly
-  one place (its file in slides/).
-
-  The slide files are listed explicitly rather than discovered
-  dynamically because:
-    1. GitHub Pages doesn't support directory listings
-    2. Explicit ordering makes the presentation sequence clear
-    3. Each filename tells you what the slide is about
-  ══════════════════════════════════════════════════════════════
--->
+<!-- ════════════════════════════════════════════════════════════════
+     PRESENTATION ENGINE
+     ════════════════════════════════════════════════════════════════ -->
 <script>
-(async function loadSlides() {
-  // The 16 slides in presentation order.
-  // Each filename maps to a concept in the mathematical framework.
-  const slideFiles = [
-    'slides/01-title.html',
-    'slides/02-what-is-e8.html',
-    'slides/03-e8-live.html',
-    'slides/04-projection.html',
-    'slides/05-shells.html',
-    'slides/06-information.html',
-    'slides/07-vopson.html',
-    'slides/08-sigma-chain.html',
-    'slides/09-rotation-planes.html',
-    'slides/10-klein-quartic.html',
-    'slides/11-tower.html',
-    'slides/12-nested-torus.html',
-    'slides/13-fine-structure.html',
-    'slides/14-established.html',
-    'slides/15-open-questions.html',
-    'slides/16-thanks.html'
-  ];
+(function(){
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var counter = document.getElementById('counter');
+  var timerEl = document.getElementById('timer');
+  var notesBar = document.getElementById('notes-bar');
+  var total = slides.length;
+  var cur = 0;
+  var notesVisible = false;
+  var timerStart = null;
+  var timerRAF = null;
+  var reviewMode = false;
+  var overviewOpen = false;
+  var animated = {};
 
-  const deck = document.getElementById('deck');
+  /* ── Progress Bar ── */
+  var progressBar = document.createElement('div');
+  progressBar.className = 'progress-bar';
+  progressBar.style.width = '0%';
+  document.body.appendChild(progressBar);
 
-  // Fetch all slides in parallel for fast loading
-  const responses = await Promise.all(
-    slideFiles.map(f => fetch(f).then(r => r.text()).catch(() => `
-      <section class="slide" data-notes="Slide failed to load: ${f}">
-        <h2 style="color:var(--orange)">Slide not found</h2>
-        <p class="desc">${f}</p>
-      </section>
-    `))
-  );
+  /* ── Particle Field ── */
+  var pf = document.createElement('div');
+  pf.className = 'particle-field';
+  document.body.insertBefore(pf, document.body.firstChild);
+  var pColors = ['rgba(200,169,110,.3)', 'rgba(0,229,255,.25)', 'rgba(191,127,255,.2)'];
+  for (var pi = 0; pi < 30; pi++) {
+    var dot = document.createElement('div');
+    dot.className = 'particle';
+    var sz = 2 + Math.random() * 3;
+    dot.style.cssText = 'width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;background:'+pColors[Math.floor(Math.random()*pColors.length)]+';animation-duration:'+(15+Math.random()*25)+'s;animation-delay:'+(Math.random()*20)+'s';
+    pf.appendChild(dot);
+  }
 
-  // Parse each response and extract the <section> element
-  const parser = new DOMParser();
-  responses.forEach((html, i) => {
-    const doc = parser.parseFromString(html, 'text/html');
-    const section = doc.querySelector('section.slide');
-    if (section) {
-      // First slide starts active
-      if (i === 0) section.classList.add('active');
-      else section.classList.remove('active');
-      deck.appendChild(section);
+  function updateProgress() {
+    progressBar.style.width = (total > 1 ? (cur / (total - 1)) * 100 : 0) + '%';
+  }
+
+  /* ── Navigate with directional transition ── */
+  function go(idx) {
+    if (idx < 0 || idx >= total || idx === cur) return;
+    var dir = idx > cur ? 'left' : 'right';
+    var prev = cur;
+    slides[prev].classList.remove('active');
+    if (!reviewMode) {
+      slides[prev].classList.add(dir === 'left' ? 'exit-left' : 'exit-right');
+      setTimeout(function() { slides[prev].classList.remove('exit-left','exit-right'); }, 600);
     }
+    cur = idx;
+    slides[cur].classList.remove('exit-left','exit-right');
+    slides[cur].classList.add('active');
+    counter.textContent = (cur + 1) + ' / ' + total;
+    updateProgress();
+    // Lazy-load iframe
+    var iframe = slides[cur].querySelector('iframe[data-src]');
+    if (iframe && !iframe.src) {
+      iframe.src = iframe.dataset.src;
+      iframe.addEventListener('load', function() {
+        iframe.classList.add('loaded');
+        var wrap = iframe.closest('.iframe-wrap');
+        if (wrap) wrap.classList.add('loaded');
+      });
+    }
+    notesBar.textContent = slides[cur].dataset.notes || '';
+    triggerAnimations(cur);
+    if (!timerStart && idx > 0) startTimer();
+  }
+
+  /* ── Stagger animate child elements ── */
+  function animateElements(slide, delay) {
+    delay = delay || 200;
+    var targets = slide.querySelectorAll('h2,h3,p,.eq,blockquote,.desc,.desc-sm,.split,.thanks-grid,.thanks-name,.iframe-overlay');
+    for (var i = 0; i < targets.length; i++) {
+      targets[i].classList.add('anim-target');
+      (function(el, d) { setTimeout(function() { el.classList.add('visible'); }, d); })(targets[i], delay + i * 120);
+    }
+  }
+
+  /* ── Count up number ── */
+  function countUp(el, target, duration, suffix) {
+    suffix = suffix || '';
+    var startTime = null;
+    function tick(ts) {
+      if (!startTime) startTime = ts;
+      var p = Math.min((ts - startTime) / duration, 1);
+      var eased = 1 - (1 - p) * (1 - p);
+      el.textContent = Math.round(eased * target) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ── Slide animations ── */
+  function triggerAnimations(idx) {
+    if (animated[idx]) return;
+    animated[idx] = true;
+    var slide = slides[idx];
+
+    switch (idx) {
+      case 0: // Title
+        var els = slide.querySelectorAll('.title-content > *');
+        for (var i = 0; i < els.length; i++) {
+          els[i].classList.add('anim-target');
+          (function(el, d) { setTimeout(function() { el.classList.add('visible'); }, d); })(els[i], 400 + i * 250);
+        }
+        break;
+
+      case 1: // Bars
+        animateElements(slide, 100);
+        setTimeout(function() {
+          var bars = document.querySelectorAll('#palindrome-bars .bar-fill');
+          var vals = document.querySelectorAll('#palindrome-bars .bar-value');
+          for (var i = 0; i < bars.length; i++) {
+            (function(bar, d) { setTimeout(function() { bar.style.height = bar.dataset.h + 'px'; bar.classList.add('grown'); }, d); })(bars[i], i * 250);
+          }
+          for (var j = 0; j < vals.length; j++) {
+            (function(val, d) { setTimeout(function() { val.classList.add('visible'); }, d); })(vals[j], bars.length * 250 + 200 + j * 100);
+          }
+        }, 600);
+        break;
+
+      case 3: // Projection animation
+        animateElements(slide, 100);
+        setTimeout(function() { startProjectionAnim(); }, 800);
+        break;
+
+      case 7: // Sigma chain with divisor chips
+        animateElements(slide, 100);
+        setTimeout(function() {
+          var allEls = document.querySelectorAll('#sigma-chain .sigma-step, #sigma-chain .sigma-arrow, #sigma-chain .sigma-viz');
+          var delay = 0;
+          for (var i = 0; i < allEls.length; i++) {
+            var el = allEls[i];
+            if (el.classList.contains('sigma-step')) {
+              (function(e, d) { setTimeout(function() { e.classList.add('show'); }, d); })(el, delay);
+              delay += 600;
+            } else if (el.classList.contains('sigma-arrow')) {
+              (function(e, d) { setTimeout(function() { e.classList.add('show'); }, d); })(el, delay);
+              delay += 400;
+            } else if (el.classList.contains('sigma-viz')) {
+              (function(vizEl, d) {
+                setTimeout(function() { animateDivisors(vizEl); }, d);
+              })(el, delay);
+              delay += 800;
+            }
+          }
+        }, 500);
+        break;
+
+      case 12: // 137 with decomp blocks
+        var bigNum = slide.querySelector('.big-num');
+        var others = slide.querySelectorAll('h2,h3,p,.desc-sm');
+        if (bigNum) { bigNum.style.opacity = '0'; bigNum.style.transform = 'scale(0.5)'; bigNum.style.transition = 'opacity 1.2s cubic-bezier(.22,1,.36,1), transform 1.2s cubic-bezier(.34,1.56,.64,1)'; }
+        for (var i = 0; i < others.length; i++) others[i].classList.add('anim-target');
+        setTimeout(function() { if (bigNum) { bigNum.style.opacity = '1'; bigNum.style.transform = 'scale(1)'; } }, 300);
+        // Animate decomposition blocks after big number
+        setTimeout(function() { animateDecomp(); }, 1400);
+        for (var i = 0; i < others.length; i++) {
+          (function(el, d) { setTimeout(function() { el.classList.add('visible'); }, d); })(others[i], 2800 + i * 200);
+        }
+        break;
+
+      case 4: // Shell cards + rings
+        animateElements(slide, 100);
+        setTimeout(function() {
+          var cards = document.querySelectorAll('#shell-grid .shell-card');
+          for (var i = 0; i < cards.length; i++) {
+            (function(c, d) { setTimeout(function() { c.classList.add('show'); }, d); })(cards[i], i * 300);
+          }
+        }, 500);
+        setTimeout(function() { startRingsAnim(); }, 1200);
+        break;
+
+      case 5: // Info table + bits canvas
+        animateElements(slide, 100);
+        setTimeout(function() {
+          var rows = slide.querySelectorAll('.info-row');
+          for (var i = 0; i < rows.length; i++) {
+            (function(r, d) { setTimeout(function() { r.classList.add('visible'); }, d); })(rows[i], i * 400);
+          }
+        }, 500);
+        setTimeout(function() { startBitsAnim(); }, 2200);
+        break;
+
+      case 13: // Stats + verification bar
+        animateElements(slide, 100);
+        setTimeout(function() {
+          var fill = document.getElementById('verify-fill');
+          var lbl = document.getElementById('verify-label');
+          if (fill) fill.classList.add('full');
+          if (lbl) {
+            var startTime = null;
+            (function tick(ts) {
+              if (!startTime) startTime = ts;
+              var p = Math.min((ts - startTime) / 2000, 1);
+              var eased = 1 - Math.pow(1-p, 3);
+              var n = Math.round(eased * 361);
+              lbl.textContent = n + ' / 361 tests passing' + (p < 1 ? '...' : ' ✓');
+              if (n >= 361) lbl.style.color = 'var(--gold)';
+              if (p < 1) requestAnimationFrame(tick);
+            })(performance.now());
+          }
+        }, 300);
+        setTimeout(function() {
+          var cards = slide.querySelectorAll('.stat-card');
+          for (var i = 0; i < cards.length; i++) {
+            (function(card, d) {
+              setTimeout(function() {
+                card.classList.add('visible');
+                var numEl = card.querySelector('.sc-num');
+                if (numEl) {
+                  var text = numEl.textContent.trim();
+                  if (text.indexOf('/') !== -1) {
+                    var parts = text.split('/');
+                    var target = parseInt(parts[0]);
+                    var denom = parts[1];
+                    var startTime = null;
+                    (function tick(ts) {
+                      if (!startTime) startTime = ts;
+                      var p = Math.min((ts - startTime) / 1500, 1);
+                      var eased = 1 - Math.pow(1-p,3);
+                      numEl.textContent = Math.round(eased * target) + '/' + denom;
+                      if (p < 1) requestAnimationFrame(tick);
+                    })(performance.now());
+                  } else {
+                    var num = parseInt(text);
+                    if (!isNaN(num) && num > 0) countUp(numEl, num, 1500, '');
+                  }
+                }
+              }, d);
+            })(cards[i], i * 300);
+          }
+        }, 500);
+        break;
+
+      case 14: // Open questions
+        animateElements(slide, 100);
+        setTimeout(function() {
+          var items = slide.querySelectorAll('.oq-list li');
+          for (var i = 0; i < items.length; i++) {
+            (function(li, d) { setTimeout(function() { li.classList.add('visible'); }, d); })(items[i], i * 250);
+          }
+        }, 400);
+        break;
+
+      default:
+        animateElements(slide, 200);
+        break;
+    }
+  }
+
+  /* ── Timer ── */
+  function startTimer() {
+    timerStart = performance.now();
+    function tick() {
+      var elapsed = Math.floor((performance.now() - timerStart) / 1000);
+      var m = Math.floor(elapsed / 60);
+      var s = elapsed % 60;
+      timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+      timerRAF = requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
+  /* ── Review Mode ── */
+  function enterReviewMode() {
+    reviewMode = true;
+    document.body.classList.add('review-mode');
+    slides.forEach(function(slide, i) {
+      animated[i] = true;
+      slide.querySelectorAll('.anim-target').forEach(function(el) { el.classList.add('visible'); });
+      slide.querySelectorAll('.shell-card,.sigma-step,.sigma-arrow').forEach(function(el) { el.classList.add('show'); });
+      slide.querySelectorAll('.info-row,.stat-card,.bar-value').forEach(function(el) { el.classList.add('visible'); });
+      slide.querySelectorAll('.oq-list li').forEach(function(el) { el.classList.add('visible'); });
+      slide.querySelectorAll('.bar-fill,.decomp-bar').forEach(function(bar) { if (bar.dataset.h) { bar.style.height = (parseFloat(bar.dataset.h) * (bar.classList.contains('decomp-bar') ? 1.1 : 1)) + 'px'; bar.classList.add('grown'); } });
+      slide.querySelectorAll('.sigma-divisor,.sigma-equals,.decomp-plus').forEach(function(el) { el.classList.add('visible'); });
+      var vf = document.getElementById('verify-fill'); if (vf) vf.classList.add('full');
+      var vl = document.getElementById('verify-label'); if (vl) { vl.textContent = '361 / 361 tests passing ✓'; vl.style.color = 'var(--gold)'; }
+    });
+  }
+
+  /* ── Keyboard ── */
+  document.addEventListener('keydown', function(e) {
+    if (overviewOpen && e.key !== 'Escape' && e.key !== 'g' && e.key !== 'G') return;
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(cur + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+    else if (e.key === 'Escape') { if (overviewOpen) { e.preventDefault(); toggleOverview(); } }
+    else if (e.key === 'g' || e.key === 'G') { e.preventDefault(); toggleOverview(); }
+    else if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      reviewMode = !reviewMode;
+      if (reviewMode) enterReviewMode();
+      else { document.body.classList.remove('review-mode'); location.reload(); }
+    }
+    else if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+    else if (e.key === 'n' || e.key === 'N') {
+      e.preventDefault();
+      notesVisible = !notesVisible;
+      notesBar.classList.toggle('show', notesVisible);
+    }
+    else if (e.key >= '1' && e.key <= '9') go(parseInt(e.key) - 1);
+    else if (e.key === '0') go(9);
   });
 
-  // Now load the presentation engine and animations
-  // (they need the slides to be in the DOM first)
-  const animScript = document.createElement('script');
-  animScript.src = 'js/animations.js';
-  document.body.appendChild(animScript);
+  /* ── Touch swipe ── */
+  var touchX = 0, touchY = 0;
+  document.addEventListener('touchstart', function(e) { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchX;
+    var dy = e.changedTouches[0].clientY - touchY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) go(cur + 1); else go(cur - 1);
+    }
+  }, { passive: true });
 
-  animScript.onload = function() {
-    const engineScript = document.createElement('script');
-    engineScript.src = 'js/engine.js';
-    document.body.appendChild(engineScript);
-  };
+  /* ── Slide Overview ── */
+  var overviewEl = document.getElementById('slide-overview');
+  var overviewGrid = document.getElementById('slide-overview-grid');
+
+  function buildOverview() {
+    overviewGrid.innerHTML = '';
+    slides.forEach(function(slide, i) {
+      var item = document.createElement('div');
+      item.className = 'slide-overview-item' + (i === cur ? ' current' : '');
+      var h2 = slide.querySelector('h2');
+      var title = h2 ? h2.textContent : 'Slide ' + (i + 1);
+      item.innerHTML = '<div class="slide-overview-num">' + (i+1) + ' / ' + total + '</div><div class="slide-overview-title">' + title + '</div>';
+      item.addEventListener('click', function() { go(i); toggleOverview(); });
+      overviewGrid.appendChild(item);
+    });
+  }
+
+  function toggleOverview() {
+    overviewOpen = !overviewOpen;
+    if (overviewOpen) buildOverview();
+    overviewEl.classList.toggle('open', overviewOpen);
+  }
+
+  /* ── Mobile Nav Bar ── */
+  var navPrev = document.getElementById('nav-prev');
+  var navNext = document.getElementById('nav-next');
+  var navTitle = document.getElementById('nav-title');
+  var navBar = document.getElementById('nav-bar');
+  var edgeLeft = document.getElementById('edge-left');
+  var edgeRight = document.getElementById('edge-right');
+
+  if (navPrev) navPrev.addEventListener('click', function(e) { e.stopPropagation(); go(cur-1); });
+  if (navNext) navNext.addEventListener('click', function(e) { e.stopPropagation(); go(cur+1); });
+  if (edgeLeft) edgeLeft.addEventListener('click', function(e) { e.stopPropagation(); go(cur-1); });
+  if (edgeRight) edgeRight.addEventListener('click', function(e) { e.stopPropagation(); go(cur+1); });
+
+  if (navBar) {
+    var navTX = 0;
+    navBar.addEventListener('touchstart', function(e) { navTX = e.touches[0].clientX; }, {passive:true});
+    navBar.addEventListener('touchend', function(e) {
+      var dx = e.changedTouches[0].clientX - navTX;
+      if (Math.abs(dx) > 40) { dx < 0 ? go(cur+1) : go(cur-1); }
+    }, {passive:true});
+  }
+
+  var _origGo = go;
+  go = function(idx) { _origGo(idx); if (navTitle && slides[cur]) { var h = slides[cur].querySelector('h2'); navTitle.textContent = h ? h.textContent : 'Slide '+(cur+1); } };
+
+  /* ── Mobile: MENU / counter ── */
+  var menuBtn = document.getElementById('mobile-menu-btn');
+  if (menuBtn) menuBtn.addEventListener('click', function(e) { e.stopPropagation(); toggleOverview(); });
+  counter.addEventListener('click', function(e) { e.stopPropagation(); toggleOverview(); });
+
+  /* ── Auto review on touch ── */
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) enterReviewMode();
+
+  /* ── Init ── */
+  go(0);
+  slides[0].classList.add('active');
+  notesBar.textContent = slides[0].dataset.notes || '';
+  updateProgress();
+  triggerAnimations(0);
+  /* ═══════════════════════════════════════════════════
+     VISUAL CONTENT ANIMATIONS
+     ═══════════════════════════════════════════════════ */
+
+  /* ── Projection: dots separate into colored rings ── */
+  function startProjectionAnim() {
+    var c = document.getElementById('proj-canvas');
+    if (!c) return;
+    var dpr = window.devicePixelRatio || 1;
+    var w = c.clientWidth; var h = c.clientHeight;
+    c.width = w * dpr; c.height = h * dpr;
+    var ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+    var cx = w / 2, cy = h / 2;
+    var maxR = Math.min(w, h) * 0.44;
+
+    // Create 240 dots with random positions
+    var pops = [24, 56, 40, 40, 56, 24];
+    var colors = ['#00e5ff', '#c8a96e', '#bf7fff', '#bf7fff', '#c8a96e', '#00e5ff'];
+    var dots = [];
+    for (var s = 0; s < 6; s++) {
+      var targetR = maxR * (0.3 + s * 0.12);
+      for (var j = 0; j < pops[s]; j++) {
+        var angle = (j / pops[s]) * Math.PI * 2 + s * 0.5;
+        dots.push({
+          // Start: mixed cloud
+          sx: cx + (Math.random() - 0.5) * maxR * 1.4,
+          sy: cy + (Math.random() - 0.5) * maxR * 1.4,
+          // End: organized ring
+          ex: cx + Math.cos(angle) * targetR,
+          ey: cy + Math.sin(angle) * targetR,
+          color: colors[s],
+          shell: s
+        });
+      }
+    }
+
+    var startTime = null;
+    var duration = 3000;
+
+    function draw(ts) {
+      if (!startTime) startTime = ts;
+      var p = Math.min((ts - startTime) / duration, 1);
+      // Ease out cubic
+      var t = 1 - Math.pow(1 - p, 3);
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw shell rings (fade in)
+      if (p > 0.3) {
+        var ringAlpha = Math.min((p - 0.3) / 0.4, 1) * 0.15;
+        for (var s = 0; s < 6; s++) {
+          var r = maxR * (0.3 + s * 0.12);
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.strokeStyle = colors[s].replace(')', ',' + ringAlpha + ')').replace('rgb', 'rgba').replace('#', '');
+          // Convert hex to rgba for rings
+          var rc = colors[s];
+          if (rc[0] === '#') {
+            var rr = parseInt(rc.slice(1,3),16), gg = parseInt(rc.slice(3,5),16), bb = parseInt(rc.slice(5,7),16);
+            ctx.strokeStyle = 'rgba('+rr+','+gg+','+bb+','+ringAlpha+')';
+          }
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
+      // Draw dots
+      for (var i = 0; i < dots.length; i++) {
+        var d = dots[i];
+        var x = d.sx + (d.ex - d.sx) * t;
+        var y = d.sy + (d.ey - d.sy) * t;
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = p < 0.15 ? 'rgba(232,224,208,0.5)' : d.color;
+        ctx.globalAlpha = 0.7 + t * 0.3;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Label
+      if (p > 0.1 && p < 0.5) {
+        ctx.font = '11px "Space Mono", monospace';
+        ctx.fillStyle = 'rgba(232,224,208,' + (1 - (p-0.1)/0.4) * 0.6 + ')';
+        ctx.textAlign = 'center';
+        ctx.fillText('Standard projection — roots mixed', cx, h - 8);
+      }
+      if (p > 0.6) {
+        ctx.font = '11px "Space Mono", monospace';
+        ctx.fillStyle = 'rgba(200,169,110,' + Math.min((p-0.6)/0.2, 1) * 0.8 + ')';
+        ctx.textAlign = 'center';
+        ctx.fillText('Parity projection — types separated into shells', cx, h - 8);
+      }
+
+      if (p < 1) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  }
+
+  /* ── Concentric rings showing type separation ── */
+  function startRingsAnim() {
+    var c = document.getElementById('rings-canvas');
+    if (!c) return;
+    var dpr = window.devicePixelRatio || 1;
+    var w = c.clientWidth; var h = c.clientHeight;
+    c.width = w * dpr; c.height = h * dpr;
+    var ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+    var cx = w/2, cy = h/2;
+    var maxR = Math.min(w,h) * 0.45;
+
+    var shells = [
+      { pop: 24, color: '#00e5ff', label: 'S+' },
+      { pop: 56, color: '#c8a96e', label: 'D8' },
+      { pop: 40, color: '#00e5ff', label: 'S+' },
+      { pop: 40, color: '#00e5ff', label: 'S+' },
+      { pop: 56, color: '#c8a96e', label: 'D8' },
+      { pop: 24, color: '#00e5ff', label: 'S+' }
+    ];
+
+    var startTime = null;
+
+    function draw(ts) {
+      if (!startTime) startTime = ts;
+      var elapsed = ts - startTime;
+      ctx.clearRect(0, 0, w, h);
+
+      for (var i = 0; i < shells.length; i++) {
+        var shellDelay = i * 300;
+        var shellProgress = Math.max(0, Math.min((elapsed - shellDelay) / 800, 1));
+        if (shellProgress <= 0) continue;
+
+        var eased = 1 - Math.pow(1 - shellProgress, 3);
+        var r = maxR * (0.2 + i * 0.13);
+        var s = shells[i];
+
+        // Ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * eased, 0, Math.PI * 2);
+        ctx.strokeStyle = s.color;
+        ctx.globalAlpha = eased * 0.4;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // Dots on ring
+        var numDots = Math.round(s.pop * eased / 4); // Show 1/4 for clarity
+        for (var j = 0; j < numDots; j++) {
+          var angle = (j / (s.pop/4)) * Math.PI * 2 + elapsed * 0.0003 * (i % 2 === 0 ? 1 : -1);
+          var dx = cx + Math.cos(angle) * r * eased;
+          var dy = cy + Math.sin(angle) * r * eased;
+          ctx.beginPath();
+          ctx.arc(dx, dy, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = s.color;
+          ctx.globalAlpha = eased * 0.8;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+
+        // Label
+        if (shellProgress > 0.5) {
+          var la = Math.min((shellProgress - 0.5) * 2, 1);
+          ctx.font = '10px "Space Mono", monospace';
+          ctx.fillStyle = s.color;
+          ctx.globalAlpha = la * 0.7;
+          ctx.textAlign = 'left';
+          ctx.fillText(s.pop + ' ' + s.label, cx + r * eased + 6, cy + 4);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Keep rotating
+      if (elapsed < 20000) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  }
+
+  /* ── Information bits stacking bar ── */
+  function startBitsAnim() {
+    var c = document.getElementById('bits-canvas');
+    if (!c) return;
+    var dpr = window.devicePixelRatio || 1;
+    var w = c.clientWidth; var h = c.clientHeight;
+    c.width = w * dpr; c.height = h * dpr;
+    var ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    var totalBits = 7.907;
+    var layers = [
+      { bits: 0.997, color: '#00e5ff', label: 'H(type)' },
+      { bits: 1.509, color: '#bf7fff', label: 'H(shell|type)' },
+      { bits: 5.401, color: '#e8e0d0', label: 'H(pos|shell)' }
+    ];
+    var barY = 30;
+    var barH = 50;
+    var barMaxW = w * 0.85;
+    var barX = (w - barMaxW) / 2;
+    var startTime = null;
+
+    function draw(ts) {
+      if (!startTime) startTime = ts;
+      var p = Math.min((ts - startTime) / 2500, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      ctx.clearRect(0, 0, w, h);
+
+      // Background bar
+      ctx.fillStyle = 'rgba(200,169,110,0.06)';
+      ctx.fillRect(barX, barY, barMaxW, barH);
+
+      // Draw layers stacking left to right
+      var x = barX;
+      for (var i = 0; i < layers.length; i++) {
+        var layerDelay = i * 0.25;
+        var lp = Math.max(0, Math.min((p - layerDelay) / 0.5, 1));
+        var le = 1 - Math.pow(1 - lp, 2);
+        var lw = (layers[i].bits / totalBits) * barMaxW * le;
+
+        if (lw > 0) {
+          ctx.fillStyle = layers[i].color;
+          ctx.globalAlpha = 0.6;
+          ctx.fillRect(x, barY, lw, barH);
+          ctx.globalAlpha = 1;
+
+          // Label
+          if (lp > 0.3 && lw > 30) {
+            ctx.font = 'bold 11px "Space Mono", monospace';
+            ctx.fillStyle = layers[i].color === '#e8e0d0' ? '#050508' : layers[i].color;
+            ctx.globalAlpha = Math.min((lp - 0.3) * 2, 1);
+            ctx.textAlign = 'center';
+            ctx.fillText(layers[i].bits.toFixed(3), x + lw/2, barY + barH/2 + 4);
+            ctx.globalAlpha = 1;
+          }
+        }
+        x += lw;
+      }
+
+      // Layer labels below
+      x = barX;
+      for (var i = 0; i < layers.length; i++) {
+        var layerDelay = i * 0.25;
+        var lp = Math.max(0, Math.min((p - layerDelay) / 0.5, 1));
+        var lw = (layers[i].bits / totalBits) * barMaxW * (1 - Math.pow(1 - lp, 2));
+        if (lp > 0.5) {
+          ctx.font = '10px "Space Mono", monospace';
+          ctx.fillStyle = layers[i].color;
+          ctx.globalAlpha = Math.min((lp - 0.5) * 2, 1) * 0.7;
+          ctx.textAlign = 'center';
+          ctx.fillText(layers[i].label, x + lw/2, barY + barH + 18);
+          ctx.globalAlpha = 1;
+        }
+        x += lw;
+      }
+
+      // Total label
+      if (p > 0.8) {
+        var ta = Math.min((p - 0.8) * 5, 1);
+        ctx.font = 'bold 14px "Space Mono", monospace';
+        ctx.fillStyle = '#c8a96e';
+        ctx.globalAlpha = ta;
+        ctx.textAlign = 'center';
+        ctx.fillText('= ' + totalBits.toFixed(3) + ' bits = log₂(240)', w/2, barY + barH + 45);
+        ctx.globalAlpha = 1;
+
+        // Bracket
+        ctx.strokeStyle = 'rgba(200,169,110,' + ta * 0.3 + ')';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(barX, barY + barH + 28);
+        ctx.lineTo(barX, barY + barH + 35);
+        ctx.lineTo(barX + barMaxW * eased, barY + barH + 35);
+        ctx.lineTo(barX + barMaxW * eased, barY + barH + 28);
+        ctx.stroke();
+      }
+
+      if (p < 1) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+  }
+
+  /* ── Divisor chips for σ-chain ── */
+  function animateDivisors(vizEl) {
+    var divisors = vizEl.dataset.divisors.split(',');
+    var sum = vizEl.dataset.sum;
+    vizEl.innerHTML = '';
+    for (var i = 0; i < divisors.length; i++) {
+      var chip = document.createElement('span');
+      chip.className = 'sigma-divisor';
+      chip.textContent = divisors[i];
+      vizEl.appendChild(chip);
+      if (i < divisors.length - 1) {
+        var plus = document.createElement('span');
+        plus.className = 'sigma-equals';
+        plus.textContent = '+';
+        vizEl.appendChild(plus);
+      }
+    }
+    var eq = document.createElement('span');
+    eq.className = 'sigma-equals';
+    eq.textContent = ' = ' + sum;
+    eq.style.color = 'var(--gold)';
+    eq.style.fontWeight = '700';
+    vizEl.appendChild(eq);
+
+    // Stagger reveal
+    var allChips = vizEl.querySelectorAll('.sigma-divisor, .sigma-equals');
+    for (var i = 0; i < allChips.length; i++) {
+      (function(el, d) { setTimeout(function() { el.classList.add('visible'); }, d); })(allChips[i], i * 80);
+    }
+  }
+
+  /* ── 137 Decomposition blocks ── */
+  function animateDecomp() {
+    var bars = document.querySelectorAll('#decomp-137 .decomp-bar');
+    var pluses = document.querySelectorAll('#decomp-137 .decomp-plus');
+    var vals = document.querySelectorAll('#decomp-137 .decomp-bar-val');
+    var maxH = 140;
+    var heights = [128, 8, 1];
+
+    for (var i = 0; i < bars.length; i++) {
+      var targetH = Math.max((heights[i] / 128) * maxH, 8);
+      (function(bar, th, d) {
+        setTimeout(function() { bar.style.height = th + 'px'; }, d);
+      })(bars[i], targetH, i * 400);
+    }
+    for (var i = 0; i < pluses.length; i++) {
+      (function(p, d) { setTimeout(function() { p.classList.add('visible'); }, d); })(pluses[i], 200 + i * 400);
+    }
+  }
+
 })();
 </script>
 
